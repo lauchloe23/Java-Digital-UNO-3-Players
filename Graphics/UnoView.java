@@ -38,6 +38,13 @@ public class UnoView extends JPanel implements ActionListener{
 	
 	}
 	
+	private void drawInstruction(Graphics2D g2){
+	}
+	
+	private void drawYourTurn(Graphics2D g2){}
+	private void drawWait(Graphics2D g2){}
+	private void drawTheme(Graphics2D g2){}
+	private void drawChat(Graphics2D g2){}
 	
 	// Constructor
 	public UnoView(){
