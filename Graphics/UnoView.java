@@ -23,8 +23,8 @@ public class UnoView extends JPanel implements ActionListener{
 	Color unoGreen = new Color(30, 160, 80);
 	Color unoYellow = new Color(230, 190, 30);
 	Color goldColor = new Color(255, 200, 50);
-	Color btnGold = new Color(240, 180, 20);
-	Color btnGoldDark = new Color(180, 130, 10);
+	Color btnGold = new Color(240, 180, 20); // Button Main Color
+	Color btnGoldDark = new Color(180, 130, 10); // Button Gold Color
 	
 	// Font
 	Font titleFont = new Font("Georgia", Font.BOLD, 36);
@@ -49,9 +49,15 @@ public class UnoView extends JPanel implements ActionListener{
 	boolean blnLeaderBoard = false; // leaderboard screen
 	boolean blnChat = false; // chat screen
 	
-	// Image
+	// Image Variables
 	BufferedImage imgStart = null;
 	BufferedImage imgBackground = null;
+	BufferedImage imtWait = null;
+	BufferedImage imgPickCard = null;
+	BufferedImage imgDisplay = null;
+	BufferedImage imgYourTurn = null;
+	BufferedImage imgGameOver = null;
+	BufferedImage imgDecision = null;
 	
 	// Game Data
 	String strName = "Player";
