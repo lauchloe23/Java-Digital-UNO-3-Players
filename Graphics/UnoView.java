@@ -2,36 +2,75 @@ import javax.swing.*;
 import java.awt.event.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.awt.geom.RoundRectangle2D;
 import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 
 public class UnoView extends JPanel implements ActionListener{
 	// Properties
-	int intWidth = 1280;
-	int intHeight = 720;
+	final int intWidth = 1280;
+	final int intHeight = 720;
 	
 	// JFrame 
 	JFrame theFrame = new JFrame("UNO");
 	
 	// Color
 	Color transparentBlack = new Color(0, 0, 0, 200);
+	Color transparentDark = new Color(0, 0, 0, 160);
+	Color unoRed = new Color(220, 50, 50);
+	Color unoBlue = new Color(30, 100, 200);
+	Color unoGreen = new Color(30, 160, 80);
+	Color unoYellow = new Color(230, 190, 30);
+	Color goldColor = new Color(255, 200, 50);
+	Color btnGold = new Color(240, 180, 20);
+	Color btnGoldDark = new Color(180, 130, 10);
 	
 	// Font
 	Font titleFont = new Font("Georgia", Font.BOLD, 36);
 	Font headerFont = new Font("Georgia", Font.BOLD, 22);
-	Font bodyFont = new Font("Georgia", Font.PLAIN, 14);	
+	Font subFont = new Font("Georgia", Font.BOLD, 18);
+	Font bodyFont = new Font("Georgia", Font.PLAIN, 14);
+	Font buttonFont = new Font("Georgia", Font.BOLD, 16);
+	Font bigFont = new Font("Georgia", Font.BOLD, 72);
+	Font cardFont = new Font("Georgia", Font.BOLD, 20);	
 
 	
-	// Screen
-	boolean blnHelp = false;
-	boolean blnThemeScreen = false;
-	boolean blnEnterScreen = true;
-	boolean blnTurnScreen = false;
+	// Screen Boolean Variables
+	boolean blnEnterScreen = true; // Start screen
+	boolean blnPlayScreen = false; // Main menu
+	boolean blnThemeScreen = false; // Enter name & theme
+	boolean blnWaitScreen = false; // wait screen
+	boolean blnPickCard = false; // pick card screen
+	boolean blnDisplayCard = false; // show card drawn screen
+	boolean blnTurnScreen = false; // your turn screen
+	boolean blnGameOver = false; // game over screen
+	boolean blnHelp = false; // help screen
+	boolean blnLeaderBoard = false; // leaderboard screen
+	boolean blnChat = false; // chat screen
 	
 	// Image
 	BufferedImage imgStart = null;
 	BufferedImage imgBackground = null;
+	
+	// Game Data
+	String strName = "Player";
+	String strWinner = "";
+	int intTheme = 0; // Standard = 0. Pokemon = 1. InsideOut = 2.
+	
+	// Player Card Count
+	int intCardCount1; // player 1
+	int intCardCount2; // player 2
+	int intCardCount3; // player 3
+	
+	// Draw Cards (color, value)
+	// int[][] strCard = {}
+	
+	// int intDrawnCard[] = 
+	// int intDecisionCard[] =
+	
+	// JComponent (Play Screen);
+	
 	
 	// Action Listener
 	public void actionPerformed(ActionEvent e){
