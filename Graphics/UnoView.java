@@ -75,7 +75,23 @@ public class UnoView extends JPanel implements ActionListener{
 	// int intDrawnCard[] = 
 	// int intDecisionCard[] =
 	
-	// JComponent (Play Screen);
+	// JComponent (Play Screen)
+	JButton playButton = createGoldButton("PLAY");
+	
+	// JComponent (Theme)
+	JButton btnStandard = createGoldButton("STANDARD");
+	JButton btnPokemon = createGoldButton("POKEMON");
+	JButton btnInsideOut = createGoldButton("INSIDEOUT");
+	JTextField nameField = new JTextField();
+	
+	// JComponent (Game)
+	JButton btnHelp = createGoldButton("HELP");
+	JButton btnPickUp = createGoldButton("PICK UP A CARD");
+	JButton btnLeaderBoard = createGoldButton("LEADERBOARD");
+	
+	// JComponent (Chat)
+	JTextField chatInput = new JTextField();
+	JTextArea chatArea = new JTextArea();
 	
 	
 	// Action Listener
@@ -83,20 +99,169 @@ public class UnoView extends JPanel implements ActionListener{
 		repaint();
 	}
 	
+	// draw string in center
+	private void drawCenteredString(Graphics2D g2, String strMessage, int intCenterX, int intY){
+		FontMetrics metrics = g2.getFontMetrics();
+		int intX = intCenterX - metrics.stringWidth(strMessage)/2;
+		g2.drawString(strMessage, intX, intY);
+	}
+	
+	// draw gold button method
+	private JButton createGoldButton(String strText){
+		JButton button = new JButton(strText);
+		button.setFont(buttonFont);
+		button.setForeground(Color.WHITE);
+		button.setBackground(btnGold);
+		// button.createLineBorder(btnGoldDark, 2);
+		button.setFocusPainted(false);
+		button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)); // have to look if code works
+		button.setOpaque(true);
+		button.setContentAreaFilled(true);
+		
+		// have to add mouse listener to button
+		// button.addMouseListener(
+		
+		return button;
+	}
+	
+	// highlight selected theme when selecting theme
+	private void highlightSelectedTheme(Graphics2D g2){
+		int[] btnY = {165, 215, 265};
+		for(int i = 0; i < 3; i++){
+			if(intTheme == i){
+				g2.setColor(goldColor);
+				g2.setStroke(new BasicStroke(3));
+				g2.drawRoundRect(430-5, btnY[i] - 5, 220, 50, 14, 14);
+				g2.setStroke(new BasicStroke(1));
+			}
+		}
+	}
+	
 	// Paint Component Method
 	 public void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
+        
+        // increase graphics smoothness
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
       
-		drawInstruction(g2);
-        /*
-        if(blnHelp){
+		drawBackground(g2);
+		
+		// Individual Screen
+		if(blnEnterScreen){
+			drawInstruction(g2);
+		}else if(blnPlayScreen){
+			drawPlay(g2);
+		}else if(blnThemeScreen){
+			drawWait(g2);
+		}else if(blnWaitScreen){
+			drawTheme(g2);
+		}else if(blnWaitScreen){
+			drawWait(g2);
+		}else if(blnPickCard){
+			drawPickCard(g2);
+		}else if(blnDisplayCard){
+			drawDisplayCard(g2);
+		}else if(blnTurnScreen){
+			drawYourTurn(g2);
+		}else if(blnGameOver){
+			drawGameOver(g2);
+		}
+		
+		// Overlay Screen
+		if(blnHelp){
 			drawHelp(g2);
 		}
-		*/
+		if(blnLeaderBoard){
+			drawLeaderBoard(g2);
+		}
+		if(blnChat){
+			drawChat(g2);
+		}
 	}
 	
+	// Draw Background Method
+	private void drawBackground(Graphics2D g2){
+		if(imgBackground != null){
+			g2.drawImage(imgBackground, 0, 0, intWidth, intHeight, null);
+		}else{
+			g2.setColor(unoBlue);
+			g2.fillRect(0, 0, intWidth, intHeight);
+		}
+	}
+	
+	// Draw instruction method 
+	private void drawInstruction(Graphics2D g2){
+		// overlay on imgBackground
+		g2.setColor(transparentBlack);
+		g2.fillRoundRect(200, 100, 880, 520, 10, 10);
+		
+		// title
+		g2.setColor(Color.WHITE);
+		g2.setFont(titleFont);
+		drawCenteredString(g2, "INSTRUCTION", 640, 220);
+		
+		// instruction
+		g2.setFont(headerFont);
+		g2.setColor(goldColor);
+		drawCenteredString(g2, "How to Play UNO", 640, 220);
+		
+		g2.setFont(bodyFont);
+		g2.setColor(Color.WHITE);
+		String[] strLines = {"• Match the top card of the discard pile by COLOR or NUMBER.", "• If you cannot play, draw a card from the deck.", "• Special cards: Skip, Draw Two, Wild, Wild Draw Four", "• First player to empty this hand wins!", "• 'UNO' when you only have 1 card left or draw 2 penalty cards.", "• You will be disqualify if you have 30+ cards", "• Click anywhere to continue to the Play"};
+		
+		int intY = 270;
+		String strText;
+		for(int intCount = 0; intCount < strLines.length; intCount++){
+			strText = strLines[intCount];
+			g2.drawString(strText, 250, intY);
+			intY += 30;
+		}
+	}
+	
+	// Draw play method
+	private void drawPlay(Graphics2D g2){
+		// imgStart as background
+		// PlayButton JComponent (have to positive in constructor)
+	}
+	
+	// Draw theme and name screen method
+	private void drawTheme(Graphics2D g2){
+		// overlay
+		g2.setColor(transparentDark);
+		g2.fillRoundRect(300, 80, 680, 560, 20, 20);
+		
+		// title
+		g2.setColor(Color.WHITE);
+		g2.setFont(titleFont);
+		drawCenteredString(g2, "THEME", 640, 140);
+		
+		// High light theme button
+		highlightSelectedTheme(g2);
+		
+		// Enter Name 
+		g2.setColor(Color.WHITE);
+		g2.setFont(headerFont);
+		drawCenteredString(g2, "ENTER NAME:", 640, 460);
+		
+		// theme options
+		g2.setFont(bodyFont);
+		g2.setColor(goldColor);
+		String[] strThemeNames = {"Standard", "Pokemon", "InsideOut"};
+		drawCenteredString(g2, "Selected: "+ strThemeNames[intTheme], 640, 580);
+	}
+	
+	private void drawWait(Graphics2D g2){}
+	private void drawPickCard(Graphics2D g2){}
+	private void drawDisplayCard(Graphics2D g2){}
+	private void drawYourTurn(Graphics2D g2){}
+	private void drawGameOver(Graphics2D g2){}
+	private void drawHelp(Graphics2D g2){}
+	private void drawLeaderBoard(Graphics2D g2){}
+	private void drawChat(Graphics2D g2){}
+	
+	/*
 	// Draw Help
 	private void drawHelp(Graphics2D g2){
 		g2.setColor(transparentBlack);
@@ -106,29 +271,9 @@ public class UnoView extends JPanel implements ActionListener{
 		g2.setFont(titleFont);
 		g2.drawString("Help", 600, 150);
 	}
+	*/
 	
-	private void drawInstruction(Graphics2D g2){
-		g2.setColor(transparentBlack);
-		g2.fillRoundRect(200, 100, 880, 520, 10, 10);
-		
-		g2.setColor(Color.WHITE);
-		g2.setFont(titleFont);
-		g2.drawString("Instruction", 550, 150);
-	}
-	
-	private void drawYourTurn(Graphics2D g2){}
-	
-	private void drawWait(Graphics2D g2){
-		/*g2.drawImage(
-		 * 
-		 * imgWait
-		 * imgWin
-		 * imgPickCard
-		*/
-	}
-	
-	private void drawTheme(Graphics2D g2){}
-	private void drawChat(Graphics2D g2){}
+
 	
 	// Constructor
 	public UnoView(){
