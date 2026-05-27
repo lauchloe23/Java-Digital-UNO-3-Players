@@ -8,7 +8,7 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 public class UnoView extends JPanel implements ActionListener{
-	// Properties
+	// 
 	final int intWidth = 1280;
 	final int intHeight = 720;
 	
