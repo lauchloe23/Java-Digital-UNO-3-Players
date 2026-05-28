@@ -345,7 +345,69 @@ public class UnoView extends JPanel implements ActionListener{
 		
 		// Decorations/Animation Row
 	}
-	private void drawHelp(Graphics2D g2){}
+	private void drawHelp(Graphics2D g2){
+		// Overlay background
+		g2.setColor(new Color(0, 0, 0, 180));
+		g2.fillRect(0, 0, intWidth, intHeight);
+		
+		g2.setColor(new Color(20, 20, 60, 230));
+		g2.fillRoundRect(150, 80, 980, 560, 20, 20);
+		
+		g2.setColor(goldColor);
+		g2.setStroke(new BasicStroke(2));
+		g2.drawRoundRect(150, 80, 980, 560, 20, 20);
+		g2.setStroke(new BasicStroke(1));
+		
+		// Title
+		g2.setFont(titleFont);
+		g2.setColor(Color.WHITE);
+		drawCenteredString(g2, "HELP", 640, 140);
+		
+		// Content
+		g2.setFont(headerFont);
+		g2.setColor(goldColor);
+		g2.drawString("Button Reference", 200, 195);
+		g2.setFont(bodyFont);
+		g2.setColor(Color.WHITE);
+		String[][] strHelpRows = {{"HELP", "Opens this help screen explaining game controls."}, {"PICK UP A CARD", "Draw a card from the deck when you have no valid play."}, {"LEADERBOARD", "Shows current card counts for all players."}, {"CHAT", "Type a message to send to all players in the game."}, {"Card (click)", "Click a card in your hand to play it on your turn."}};
+		
+		// draw help lines
+		int intHeightY;
+		int intCount;
+		int intRowCount = strHelpRows.length;
+		for(intCount = 0; intCount < intRowCount; intCount++){
+			String[] strRow = strHelpRows[intCount];
+			g2.setColor(goldColor);
+			g2.setFont(subFont);
+			g2.drawString(strRow[0], 200, intHeightY);
+			g2.setColor(Color.WHITE);
+			g2.setFont(bodyFont);
+			g2.drawString(strRow[1], 430, intHeightY);
+			intHeightY += 45;
+		}
+		
+		// color guide
+		g2.setFont(headerFont);
+		g2.setColor(goldColor);
+		g2.drawString("Card Colors", 200, intHeightY + 10);
+		intHeightY += 40;
+		
+		Color[] cardColors = {unoRed, unoBlue, unoGreen, unoYellow};
+		String[] strColorNames = {"Red", "Blue", "Green", "Yellow"};
+		for(intCount = 0; intCount < 4; intCount++){
+			g2.setColor(cardColors[intCount]);
+			g2.fillRoundRect(200 + intCount * 180, intHeightY, 120, 40, 10, 10);
+			g2.setColor(Color.WHITE);
+			g2.setFont(bodyFont);
+			drawCenteredString(g2, strColorNames[intCount], 260+intCount*180, intHeightY + 26);
+		}
+		
+		// Close message
+		g2.setFont(bodyFont); 
+		g2.setColor(new Color(180, 180, 180));
+		drawCenteredString(g2, "Press HELP again to close", 640, 620);
+	}
+	
 	private void drawLeaderBoard(Graphics2D g2){}
 	private void drawChat(Graphics2D g2){}
 	
