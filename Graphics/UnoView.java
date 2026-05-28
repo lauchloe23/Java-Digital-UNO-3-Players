@@ -97,6 +97,9 @@ public class UnoView extends JPanel implements ActionListener{
 	// Action Listener
 	public void actionPerformed(ActionEvent e){
 		repaint();
+		if(e.getSource() == playButton){
+			showThemeScreen();
+		}
 	}
 	
 	// draw string in center
@@ -408,20 +411,58 @@ public class UnoView extends JPanel implements ActionListener{
 		drawCenteredString(g2, "Press HELP again to close", 640, 620);
 	}
 	
-	private void drawLeaderBoard(Graphics2D g2){}
-	private void drawChat(Graphics2D g2){}
-	
-	/*
-	// Draw Help
-	private void drawHelp(Graphics2D g2){
-		g2.setColor(transparentBlack);
-		g2.fillRoundRect(200, 100, 880, 520, 10, 10);
+	private void drawLeaderBoard(Graphics2D g2){
+		// Background
+		g2.setColor(new Color(0, 0, 0, 160));
+		g2.fillRect(0, 0, intWidth,intHeight);
+		g2.setColor(new Color(20, 20, 60, 230));
+		g2.fillRoundRect(400, 150, 480, 380, 20, 20);
+		g2.setColor(goldColor);
+		g2.setStroke(new BasicStroke(2));
+		g2.drawRoundRect(400, 150, 480, 380, 20, 20);
+		g2.setStroke(new BasicStroke(1));
 		
+		// Header
+		g2.setFont(headerFont);
 		g2.setColor(Color.WHITE);
-		g2.setFont(titleFont);
-		g2.drawString("Help", 600, 150);
+		drawCenteredString(g2, "LEADERBOARD", 640, 210);
+		
+		String[] strPlayers = {"Player 1", "Player 2", "Player 3"};
+		int[] intPlayerCardCount = {intCardCount1, intCardCount2, intCardCount3};
+		g2.setFont(subFont);
+		int intLengthY;
+		
+		for(int intCount = 0; intCount < 3; intCount++){
+			// color used
+			if(intCount == 0){
+				g2.setColor(goldColor);
+			}else{
+				g2.setColor(Color.WHITE);
+			}
+			// text
+			g2.drawString(strPlayers[intCount], 450, intLengthY);
+			g2.drawString(intPlayerCardCount[intCount] + " cards", 750, intLengthY);
+			intLengthY+= 60;
+		}
+		
+		// close text
+		g2.setFont(bodyFont);
+		g2.setColor(new Color(180, 180, 180));
+		drawCenteredString(g2, "Press LEADERBOARD to close", 640, 500);
 	}
-	*/
+	
+	private void drawChat(Graphics2D g2){
+		// chat panel on the top-left
+		g2.setColor(new Color(0, 0, 0, 200));
+		g2.fillRoundRect(10, 10, 300, 340, 12, 12);
+		g2.setColor(goldColor);
+		g2.setStroke(new BasicStroke(1.5f));
+		g2.drawRoundRect(10, 10, 300, 340, 12, 12);
+		g2.setStroke(new BasicStroke(1));
+		g2.setFont(headerFont);
+		g2.setColor(Color.WHITE);
+		g2.drawString("CHAT", 130, 42);
+	}
 	
 	// Display of JButton
 	private void setComponentVisibility(){
@@ -499,6 +540,19 @@ public class UnoView extends JPanel implements ActionListener{
 		// Panel Setup
 		this.setLayout(null);
 		this.setPreferredSize(new Dimension(intWidth, intHeight));
+		this.setBackground(new Color(10, 20, 60));
+		
+		// Play button setup
+		playButton.setBounds(490, 560, 160, 55);
+		playButton.setVisible(false);
+		playButton.addActionListener(this);
+		this.add(playButton);
+		
+		// Theme screen setup
+		btnStandard.setBounds(430, 165, 200, 40);
+		btnStandard.setVisible(false);
+		btnStandard.addActionListener(this);
+		
 		
 		// Frame Setup
 		theFrame.setContentPane(this);
