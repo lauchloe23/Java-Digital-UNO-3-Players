@@ -8,7 +8,7 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 public class UnoView extends JPanel implements ActionListener{
-	// 
+	// Properties
 	final int intWidth = 1280;
 	final int intHeight = 720;
 	
@@ -137,6 +137,23 @@ public class UnoView extends JPanel implements ActionListener{
 		}
 	}
 	
+	// Back of Card (Visual) 
+	private void drawCardBack(Graphics2D g2, int intX, int intY, int intCardWidth, int intCardHeight){
+		g2.setColor(new Color(0, 0, 0, 100));
+		g2.fillRoundRect(intX+4, intY+4, intCardWidth, intCardHeight, 14, 14);
+		g2.setColor(new Color(20, 20, 80));
+		g2.fillRoundRect(intX, intY, intCardWidth, intCardHeight, 14, 14);
+		g2.setColor(unoRed);
+		g2.fillOval(intX+intCardWidth/4, intY+intCardHeight/4, intCardWidth/2, intCardHeight/2);
+		g2.setColor(Color.WHITE);
+		g2.setFont(new Font("Georgia", Font.BOLD, 22));
+		drawCenteredString(g2, "UNO", intX+intCardWidth/2, intY+intCardHeight/2+8);
+		g2.setColor(Color.WHITE);
+		g2.setStroke(new BasicStroke(2));
+		g2.drawRoundRect(intX, intY, intCardWidth, intCardHeight, 14, 14);
+		g2.setStroke(new BasicStroke(1));
+	}
+	
 	// Paint Component Method
 	 public void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -252,11 +269,82 @@ public class UnoView extends JPanel implements ActionListener{
 		drawCenteredString(g2, "Selected: "+ strThemeNames[intTheme], 640, 580);
 	}
 	
-	private void drawWait(Graphics2D g2){}
-	private void drawPickCard(Graphics2D g2){}
-	private void drawDisplayCard(Graphics2D g2){}
-	private void drawYourTurn(Graphics2D g2){}
-	private void drawGameOver(Graphics2D g2){}
+	private void drawWait(Graphics2D g2){
+		if(imgWait != null){
+			g2.drawImage(imgWait, 0, 0, intWidth, intHeight, null);
+		}else{
+			drawBackground(g2);
+		}
+		
+		// Number of Cards (Other players' card cont)
+		g2.setFont(bigFont);
+		g2.setColor(Color.WHITE);
+		
+		
+		// Waiting for player
+		g2.setColor(transparentBlack);
+		g2.fillRoundRect(290, 270, 700, 180, 20, 20);
+		
+		g2.setFont(titleFont);
+		g2.setColor(Color.WHITE);
+		drawCenteredString(g2, "WAITING FOR", 640, 330);
+		g2.setColor(goldColor);
+		drawCenteredString(g2, strName.toUpperCase(), 640, 390);
+	}
+	private void drawPickCard(Graphics2D g2){
+		if(imgPickCard != null){
+			g2.drawImage(imgPickCard, 0, 0, intWidth, intHeight, null);
+		}else{
+			drawBackground(g2);
+		}
+		
+		
+	}
+	private void drawDisplayCard(Graphics2D g2){
+		if(imgDisplay != null){
+			g2.drawImage(imgDisplay, 0, 0, intWidth, intHeight, null);
+		}else{
+			drawBackground(g2);
+		}
+		
+		// Show drawn card face
+	}
+	private void drawYourTurn(Graphics2D g2){
+		if(imgYourTurn != null){
+			g2.drawImage(imgYourTurn, 0, 0, intWidth, intHeight, null);
+		}else{
+			drawBackground(g2);
+		}
+		
+		// Your turn label
+		g2.setFont(titleFont);
+		g2.setColor(Color.WHITE);
+		drawCenteredString(g2, "YOUR TURN", 640, 60);
+		
+		// player hand
+		int intCol = 5;
+		
+	}
+	
+	private void drawGameOver(Graphics2D g2){
+		if(imgGameOver != null){
+			g2.drawImage(imgGameOver, 0, 0, intWidth, intHeight, null);
+		}else{
+			drawBackground(g2);
+		}
+		
+		// winner panel
+		g2.setColor(transparentBlack);
+		g2.fillRoundRect(290, 200, 700, 280, 20, 20);
+		g2.setFont(titleFont);
+		g2.setColor(goldColor);
+		drawCenteredString(g2, strWinner.toUpperCase()+" WINS", 640, 300);
+		g2.setFont(headerFont);
+		g2.setColor(Color.WHITE);
+		drawCenteredString(g2, "GAME OVER...", 640, 370);
+		
+		// Decorations/Animation Row
+	}
 	private void drawHelp(Graphics2D g2){}
 	private void drawLeaderBoard(Graphics2D g2){}
 	private void drawChat(Graphics2D g2){}
@@ -273,7 +361,76 @@ public class UnoView extends JPanel implements ActionListener{
 	}
 	*/
 	
-
+	// Display of JButton
+	private void setComponentVisibility(){
+		// Play screen
+		playButton.setVisible(blnPlayScreen);
+		
+		// Theme Screen
+		btnStandard.setVisible(blnThemeScreen);
+		btnPokemon.setVisible(blnThemeScreen);
+		btnInsideOut.setVisible(blnThemeScreen);
+		nameField.setVisible(blnThemeScreen);
+		
+		// Game screen
+		btnHelp.setVisible(blnTurnScreen);
+		btnPickUp.setVisible(blnTurnScreen);
+		btnLeaderBoard.setVisible(blnThemeScreen);
+	}
+	
+	// Reset Screens
+	private void resetScreens(){
+		blnEnterScreen = false;
+		blnPlayScreen = false;
+		blnThemeScreen = false;
+		blnWaitScreen = false;
+		blnPickCard = false;
+		blnDisplayCard = false;
+		blnTurnScreen = false;
+		blnGameOver = false;
+		blnHelp = false;
+		blnLeaderBoard = false;
+	}
+	
+	// Translate Screen
+	public void showPlayScreen(){
+		resetScreens();
+		blnPlayScreen = true;
+		setComponentVisibility();
+	}
+	
+	public void showThemeScreen(){
+		resetScreens();
+		blnThemeScreen = true;
+		setComponentVisibility();
+	}
+	
+	public void showWaitScreen(){
+		resetScreens();
+		blnWaitScreen = true;
+		setComponentVisibility();
+	}
+	
+	public void showPickCard(){
+		resetScreens();
+		blnPickCard = true;
+		setComponentVisibility();
+	}
+	
+	public void showDisplayCard(){}
+	
+	public void showTurnScreen(){
+		resetScreens();
+		blnTurnScreen = true;
+		setComponentVisibility();
+	}
+	
+	public void showGameOver(String strWinner){
+		this.strWinner = strWinner;
+		resetScreens();
+		blnGameOver = true;
+		setComponentVisibility();
+	}
 	
 	// Constructor
 	public UnoView(){
