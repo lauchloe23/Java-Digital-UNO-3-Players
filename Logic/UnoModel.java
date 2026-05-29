@@ -5,7 +5,5 @@ public class UnoModel{
 	
 	// Constructor
 	public UnoModel(){
-		
-	
 	}
 }

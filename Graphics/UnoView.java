@@ -7,7 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 
-public class UnoView extends JPanel implements ActionListener{
+public class UnoView extends JPanel implements ActionListener, MouseListener, KeyListener{
 	// Properties
 	final int intWidth = 1280;
 	final int intHeight = 720;
@@ -52,7 +52,7 @@ public class UnoView extends JPanel implements ActionListener{
 	// Image Variables
 	BufferedImage imgStart = null;
 	BufferedImage imgBackground = null;
-	BufferedImage imtWait = null;
+	BufferedImage imgWait = null;
 	BufferedImage imgPickCard = null;
 	BufferedImage imgDisplay = null;
 	BufferedImage imgYourTurn = null;
@@ -101,6 +101,28 @@ public class UnoView extends JPanel implements ActionListener{
 			showThemeScreen();
 		}
 	}
+	
+	// Mouse Listener Method Overrides
+	public void mouseClicked(MouseEvent e){
+		if(blnEnterScreen){
+			showPlayScreen();
+		}
+	}
+	
+	public void mousePressed(MouseEvent e){}
+	public void mouseReleased(MouseEvent e){}
+	public void mouseEntered(MouseEvent e){}
+	public void mouseExited(MouseEvent e){}
+	
+	// Key Listener Method Overrides
+	public void keyPressed(KeyEvent e){
+		if(blnEnterScreen){
+			showPlayScreen();
+		}
+	}
+	
+	public void keyTyped(KeyEvent e){}
+	public void keyReleased(KeyEvent e){}
 	
 	// draw string in center
 	private void drawCenteredString(Graphics2D g2, String strMessage, int intCenterX, int intY){
@@ -174,8 +196,6 @@ public class UnoView extends JPanel implements ActionListener{
 		}else if(blnPlayScreen){
 			drawPlay(g2);
 		}else if(blnThemeScreen){
-			drawWait(g2);
-		}else if(blnWaitScreen){
 			drawTheme(g2);
 		}else if(blnWaitScreen){
 			drawWait(g2);
@@ -220,7 +240,7 @@ public class UnoView extends JPanel implements ActionListener{
 		// title
 		g2.setColor(Color.WHITE);
 		g2.setFont(titleFont);
-		drawCenteredString(g2, "INSTRUCTION", 640, 220);
+		drawCenteredString(g2, "INSTRUCTION", 640, 175);
 		
 		// instruction
 		g2.setFont(headerFont);
@@ -375,7 +395,7 @@ public class UnoView extends JPanel implements ActionListener{
 		String[][] strHelpRows = {{"HELP", "Opens this help screen explaining game controls."}, {"PICK UP A CARD", "Draw a card from the deck when you have no valid play."}, {"LEADERBOARD", "Shows current card counts for all players."}, {"CHAT", "Type a message to send to all players in the game."}, {"Card (click)", "Click a card in your hand to play it on your turn."}};
 		
 		// draw help lines
-		int intHeightY;
+		int intHeightY = 240;
 		int intCount;
 		int intRowCount = strHelpRows.length;
 		for(intCount = 0; intCount < intRowCount; intCount++){
@@ -430,7 +450,7 @@ public class UnoView extends JPanel implements ActionListener{
 		String[] strPlayers = {"Player 1", "Player 2", "Player 3"};
 		int[] intPlayerCardCount = {intCardCount1, intCardCount2, intCardCount3};
 		g2.setFont(subFont);
-		int intLengthY;
+		int intLengthY = 270;
 		
 		for(int intCount = 0; intCount < 3; intCount++){
 			// color used
@@ -541,6 +561,7 @@ public class UnoView extends JPanel implements ActionListener{
 		this.setLayout(null);
 		this.setPreferredSize(new Dimension(intWidth, intHeight));
 		this.setBackground(new Color(10, 20, 60));
+		this.addMouseListener(this);
 		
 		// Play button setup
 		playButton.setBounds(490, 560, 160, 55);
@@ -565,15 +586,17 @@ public class UnoView extends JPanel implements ActionListener{
 		Timer timer = new Timer(16, this);
 		timer.start();
 		
-		// load images
-		/*
+		// Image
+		String strPath = "../Image/Background/";
 		try{
-			imgStart = ImageIO.read(new File("start.png"));
-			imgBackground = ImageIO.read(new File("background.png"));
+			imgStart = ImageIO.read(new File(strPath + "start_bg.png"));
+			imgBackground = ImageIO.read(new File(strPath + "general_bg.png"));
+			imgWait = ImageIO.read(new File(strPath + "wait_bg.png"));
 		}catch(IOException e){
-			System.out.println("Unable to load image");
+			System.out.println("Error: Could not load image");
+			e.printStackTrace();
 		}
-		*/
+	
 	}
 	
 	// Main Method
