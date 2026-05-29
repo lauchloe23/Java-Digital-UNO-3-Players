@@ -11,7 +11,7 @@ public class UnoView extends JPanel implements ActionListener{
 	// Properties
 	final int intWidth = 1280;
 	final int intHeight = 720;
-	
+
 	// JFrame 
 	JFrame theFrame = new JFrame("UNO");
 	
@@ -540,6 +540,7 @@ public class UnoView extends JPanel implements ActionListener{
 		// Panel Setup
 		this.setLayout(null);
 		this.setPreferredSize(new Dimension(intWidth, intHeight));
+<<<<<<< Updated upstream
 		this.setBackground(new Color(10, 20, 60));
 		
 		// Play button setup
@@ -553,6 +554,9 @@ public class UnoView extends JPanel implements ActionListener{
 		btnStandard.setVisible(false);
 		btnStandard.addActionListener(this);
 		
+=======
+
+>>>>>>> Stashed changes
 		
 		// Frame Setup
 		theFrame.setContentPane(this);
