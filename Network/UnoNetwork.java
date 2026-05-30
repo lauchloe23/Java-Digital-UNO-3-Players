@@ -1,5 +1,4 @@
 import java.awt.event.*;
-import java.net.*;
 
 public class UnoNetwork implements ActionListener{
 	//Properties
