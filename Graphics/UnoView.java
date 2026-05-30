@@ -6,14 +6,44 @@ import java.awt.geom.RoundRectangle2D;
 import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.util.Random;
 
 public class UnoView extends JPanel implements ActionListener, MouseListener, KeyListener{
 	// Properties
 	final int intWidth = 1280;
 	final int intHeight = 720;
+	final int intMaxCards = 30;
+	final int intStartCards = 7;
+	final int intPerPage = 2;
 
 	// JFrame 
 	JFrame theFrame = new JFrame("UNO");
+	
+	// Deck & Cards Array 
+	// 100 cards in a deck
+	String[][] strDeck = new String[100][4];
+	String[][] strDrawPile = new String[100][4];
+	String[][] strDiscardPile = new String[100][4];
+	String[][] strPlayHand = new String[30][4];
+	
+	// Card Counts in each pile
+	int intDeckSize = 0;
+	int intDrawPileSize = 0;
+	int intDiscardPileSize = 0;
+	int intHandSize = 0;
+	
+	// Player Data
+	String[] strPlayNames = {"Player","Player 2", "Player 3"};
+	int[] intTurnOrder = {0, 1, 2};
+	int intCurrentTurn = 0;
+	boolean blnClockwise = true;
+	
+	// transition
+	int intFadeAlpha = 0;
+	boolean blnFading = false;
+	String strNextScreen = "";
 	
 	// Color
 	Color transparentBlack = new Color(0, 0, 0, 200);
@@ -69,12 +99,6 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	int intCardCount2; // player 2
 	int intCardCount3; // player 3
 	
-	// Draw Cards (color, value)
-	// int[][] strCard = {}
-	
-	// int intDrawnCard[] = 
-	// int intDecisionCard[] =
-	
 	// JComponent (Play Screen)
 	JButton playButton = createGoldButton("PLAY");
 	
@@ -93,19 +117,56 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	JTextField chatInput = new JTextField();
 	JTextArea chatArea = new JTextArea();
 	
+	// JComponent (game play)
+	JButton btnEnterGame = createGoldButton("START GAME");
+	JButton btnPrev = createGoldButton("<PREV");
+	JButton btnNext = createGoldButton("Next>");
 	
 	// Action Listener
 	public void actionPerformed(ActionEvent e){
 		repaint();
 		if(e.getSource() == playButton){
 			showThemeScreen();
+		}else if(e.getSource() == btnStandard){
+			intTheme = 0;
+		}else if(e.getSource() == btnPokemon){
+			intTheme = 1;
+		}else if(e.getSource() == btnInsideOut){
+			intTheme = 2;
+		}else if(e.getSource() == btnHelp){
+			blnHelp = !blnHelp;
+		}else if(e.getSource() == btnLeaderBoard){
+			blnLeaderBoard = !blnLeaderBoard;
+		}else if(e.getSource() == btnPickUp){
+			showPickCard();
+		}else if(e.getSource() == btnEnterGame){
+			String strTyped = nameField.getText().trim();
+			if(!strTyped.equals("")){
+				strName = strTyped;
+				strPlayNames[0] = strName;
+				startGame();
+			}
+		}else if(e.getSource() == btnPrev){
+			if(intCardPage > 0){
+				intCardPage--;
+			}
+		}else if(e.getSource() == btnNext){
+			/* int intTotalPages = playerHand.size() / intPerPage;
+			 * if(playerHand.size() % intPerPage != 0){
+			 *		intTotalPages++;
+			 * }
+			 */
+			
 		}
 	}
 	
 	// Mouse Listener Method Overrides
 	public void mouseClicked(MouseEvent e){
 		if(blnEnterScreen){
-			showPlayScreen();
+			fadeToScreen("play");
+			// showPlayScreen();
+		}else if(blnTurnScreen && !blnHelp && !blnLeaderBoard){
+			handleCardClick(e.getX(), e.getY());
 		}
 	}
 	
@@ -137,15 +198,11 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		button.setFont(buttonFont);
 		button.setForeground(Color.WHITE);
 		button.setBackground(btnGold);
-		// button.createLineBorder(btnGoldDark, 2);
 		button.setFocusPainted(false);
-		button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)); // have to look if code works
+		button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		button.setOpaque(true);
 		button.setContentAreaFilled(true);
-		
-		// have to add mouse listener to button
-		// button.addMouseListener(
-		
+		button.addMouseListener(this);
 		return button;
 	}
 	
@@ -156,7 +213,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			if(intTheme == i){
 				g2.setColor(goldColor);
 				g2.setStroke(new BasicStroke(3));
-				g2.drawRoundRect(430-5, btnY[i] - 5, 220, 50, 14, 14);
+				g2.drawRoundRect(530-5, btnY[i] - 5, 220, 50, 14, 14);
 				g2.setStroke(new BasicStroke(1));
 			}
 		}
@@ -178,6 +235,226 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		g2.drawRoundRect(intX, intY, intCardWidth, intCardHeight, 14, 14);
 		g2.setStroke(new BasicStroke(1));
 	}
+	
+	// Game paint element logic method 
+	private void startGame(){}
+	
+	private void loadDeck(){
+		intDeckSize = 0;
+		String strCSVPath = "../cards.csv";
+		try{
+			BufferedReader reader = new BufferedReader(new FileReader(strCSVPath));
+			reader.readLine();
+			String strLine;
+			
+			// read through each line in csv
+			while((strLine = reader.readLine()) != null){
+				strLine = strLine.trim();
+				if(!strLine.equals("")){
+					String[] strParts = strLine.split(",");
+					if(strParts.length >= 2 && intDeckSize < 100){
+						strDeck[intDeckSize] = strParts;
+						intDeckSize++;
+					}
+				}
+			}
+			
+			reader.close();
+			System.out.println("Deck loaded: "+intDeckSize);
+		}catch(IOException e){
+			System.out.println("Could not load cards.csv: "+e.getMessage());
+			buildFallbackDeck();
+		}
+	}
+	
+	// if csv missing
+	private void buildFallbackDeck(){
+		intDeckSize = 0;
+		String[] strColors = {"red", "blue", "green", "yellow"};
+		String[] strNums = {"0", "1", "1", "2", "2", "3", "3", "4", "4", "5", "5", "6", "6", "7", "7", "8", "8", "9", "9"};
+		String[] strSpecials = {"skip", "skip", "draw2", "draw2"};
+		
+		for(int intC = 0; intC < strColors.length; intC++){
+			String strC = strColors[intC];
+			for(int intN = 0; intN < strNums.length; intN++){
+				String strCard = strC + strNums[intN];
+				String[] strCardData = {strCard, "standard"+strCard+".jpg", "pokemon"+strCard+".jpg","insideout"+strCard+".jpg"};
+				strDeck[intDeckSize] = strCardData;
+				intDeckSize++;
+			}
+			for(int intS = 0; intS < strSpecials.length; intS++){
+				String strCard = strC + strSpecials[intS];
+				String[] strCardData = {strCard, "standard"+strCard+".jpg", "pokemon"+strCard+".jpg","insideout"+strCard+".jpg"};
+				strDeck[intDeckSize] = strCardData;
+				intDeckSize++;
+			}
+		}
+		for(int i = 0; i < 4; i++){
+			String[] strWildCardData = {"wild", "standardwild.jpg","pokemonwild.jpg","insideoutwild.jpg"};
+			strDeck[intDeckSize++] = strWildCardData;
+		}
+		
+		for(int i = 0; i < 4; i++){
+			String[] strWild4CardData = {"wilddraw4","standardwilddraw4.jpg","pokemonwilddraw4.jpg","insideoutwilddraw4.jpg"};
+			strDeck[intDeckSize++] = strWild4CardData;
+		}
+	} 
+	
+	// shuffle deck method
+	private void shuffleDeck(){
+		// copy deck into drawPile
+		intDrawPileSize = 0;
+		intDiscardPileSize = 0;
+		for(int i = 0; i < intDeckSize; i++){
+			drawPile[i] = strDeck[i];
+			intDrawPileSize++;
+		}
+		
+		// shuffle pile
+		Random ran = new Random();
+		for(int i = intDrawPileSize - 1; i > 0; i--){
+			int intJ = rand.nextInt(i+1);
+			String[] strTemp = drawPile[i];
+			drawPile[i] = drawPile[intJ];
+			drawPile[intJ] = strTemp;
+		}
+	}
+	
+	// randomize player's order/tunr method
+	private void randomizeTurnOrder(){
+		intTurnOrder[0] = 0;
+		intTurnOrder[1] = 1;
+		intTurnOrder[2] = 2;
+		Random rand = new Random();
+		
+		for(int i = 2; i>0; i--){
+			int intJ = rand.nextInt(i + 1);
+			int intTemp = intTurnOrder[i];
+			intTurnOrder[i] = intTurnOrder[intJ];
+			intTurnOrder[intJ] = intTemp;
+		}
+		intCurrentTurn = 0;
+		blnClockwise = true;
+	}
+	
+	// 7 cards for start to each player method
+	private void dealStartingHands(){
+		intHandSize = 0;
+		intCardCount1 = 0;
+		intCardCount2 = intStartCards;
+		intCardCount3 = intStartCards;
+		
+		for(int i = 0; i < intStartCards; i++){
+			if(intDrawPileSize > 0){
+				// take from pile & shift remaining cards left
+				playerHand[intHandSize] = drawPile[0];
+				intHandSize++;
+				
+				// shift drawPile left 
+				for(int j = 0; j < intDrawPileSize - 1; j++){
+					drawPile[j] = drawPile[j+1];
+				}
+				intDrawPileSize--;
+			}
+		}
+		intCardCount1 = intHandSize;
+	}
+	
+	// draw from pile method
+	private void drawFromPile(){
+		if(intDrawPileSize == 0){
+			reshuffleDiscard();
+		}
+		if(intDrawPileSize > 0){
+			// Take card from front of drawPile
+			strDrawnCard = drawPile[0];
+			// Shift drawPile left
+			for(int i = 0; i < intDrawPileSize - 1; i++){
+				drawPile[i] = drawPile[i+1];
+			}
+			intDrawPileSize--;
+
+			playerHand[intHandSize] = strDrawnCard;
+			intHandSize++;
+			intCardCount1 = intHandSize;
+
+			if(intHandSize > INT_MAX_CARDS){
+				strWinner = getOpponentName();
+				fadeToScreen("gameover");
+				return;
+			}
+			showDisplayCard();
+		}
+	}
+	
+	// reshuffle deck method
+	private void reshuffleDiscard(){
+		// Copy discard pile into draw pile
+		for(int i = 0; i < intDiscardPileSize; i++){
+			drawPile[i] = discardPile[i];
+		}
+		intDrawPileSize = intDiscardPileSize;
+		intDiscardPileSize = 0;
+
+		// Fisher-Yates shuffle
+		Random rand = new Random();
+		for(int i = intDrawPileSize - 1; i > 0; i--){
+			int intJ = rand.nextInt(i + 1);
+			String[] strTemp = drawPile[i];
+			drawPile[i] = drawPile[intJ];
+			drawPile[intJ] = strTemp;
+		}
+		System.out.println("Draw pile reshuffled.");
+	}
+	
+	// player's card
+	private void playCard(int index){
+		if(intIndex < 0 || intIndex >= intHandSize){
+			return;
+		}
+
+		// Move card to discard pile
+		strDiscardPile[intDiscardPileSize] = playerHand[intIndex];
+		intDiscardPileSize++;
+
+		// Remove card from hand by shifting left
+		for(int i = intIndex; i < intHandSize - 1; i++){
+			playerHand[i] = playerHand[i+1];
+		}
+		intHandSize--;
+		intCardCount1 = intHandSize;
+
+		// Clamp page
+		int intMaxPage = 0;
+		// pages player has cards
+		if (intHandSize > 0) {
+			intMaxPage = (intHandSize + intPerPage - 1) / intPerPage - 1;
+		}
+
+		// Make sure our current page doesn't go past the last page
+		if (intCardPage > intMaxPage) {
+			intCardPage = intMaxPage;
+		}
+
+		if(intHandSize == 0){
+			strWinner = strName;
+			fadeToScreen("gameover");
+			return;
+		}
+		advanceTurn();
+	}
+
+	private void advanceTurn(){}
+	private void getOpponentName(){}
+	private void handCardClick(int intX, int intY){}
+	
+	// transition method
+	private void fadeToScreen(String strTarget){}
+	private void applyScreenSwitch(String strTarget){}
+	
+	// card image loading method
+	private BufferedImage loadCardImage(String strFileName){}
+	private BufferedImage getCardImage(String[] card){}
 	
 	// Paint Component Method
 	 public void paintComponent(Graphics g) {
@@ -260,10 +537,13 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		}
 	}
 	
-	// Draw play method
+	// Draw play button method
 	private void drawPlay(Graphics2D g2){
-		// imgStart as background
-		// PlayButton JComponent (have to positive in constructor)
+		if(imgStart != null){
+			g2.drawImage(imgStart, 0, 0, intWidth, intHeight, null);
+		}else{
+			drawBackground(g2);
+		}
 	}
 	
 	// Draw theme and name screen method
@@ -498,7 +778,13 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		// Game screen
 		btnHelp.setVisible(blnTurnScreen);
 		btnPickUp.setVisible(blnTurnScreen);
-		btnLeaderBoard.setVisible(blnThemeScreen);
+		btnLeaderBoard.setVisible(blnTurnScreen);
+		
+		btnEnterGame.setVisible(blnThemeScreen);
+		btnPrev.setVisible(blnTurnScreen);
+		btnNext.setVisible(blnTurnScreen);
+		chatInput.setVisible(blnChat && blnTurnScreen);
+		chatArea.setVisible(blnChat && blnTurnScreen);
 	}
 	
 	// Reset Screens
@@ -560,24 +846,52 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		// Panel Setup
 		this.setLayout(null);
 		this.setPreferredSize(new Dimension(intWidth, intHeight));
-<<<<<<< Updated upstream
 		this.setBackground(new Color(10, 20, 60));
 		this.addMouseListener(this);
 		
 		// Play button setup
-		playButton.setBounds(490, 560, 160, 55);
+		playButton.setBounds(560, 560, 160, 55);
 		playButton.setVisible(false);
 		playButton.addActionListener(this);
 		this.add(playButton);
 		
 		// Theme screen setup
-		btnStandard.setBounds(430, 165, 200, 40);
+		btnStandard.setBounds(530, 165, 200, 40);
 		btnStandard.setVisible(false);
 		btnStandard.addActionListener(this);
+		this.add(btnStandard);
 		
-=======
+		btnPokemon.setBounds(530, 215, 200, 40);
+		btnPokemon.setVisible(false);
+		btnPokemon.addActionListener(this);
+		this.add(btnPokemon);
 
->>>>>>> Stashed changes
+		btnInsideOut.setBounds(530, 265, 200, 40);
+		btnInsideOut.setVisible(false);
+		btnInsideOut.addActionListener(this);
+		this.add(btnInsideOut);
+
+		nameField.setBounds(430, 490, 420, 45);
+		nameField.setVisible(false);
+		this.add(nameField);
+		
+		// Help button
+		btnHelp.setBounds(30, 230, 210, 45);
+		btnHelp.setVisible(false);
+		btnHelp.addActionListener(this);
+		this.add(btnHelp);
+
+		// Pick up a card button
+		btnPickUp.setBounds(30, 290, 210, 45);
+		btnPickUp.setVisible(false);
+		btnPickUp.addActionListener(this);
+		this.add(btnPickUp);
+
+		// Leaderboard button
+		btnLeaderBoard.setBounds(30, 350, 210, 45);
+		btnLeaderBoard.setVisible(false);
+		btnLeaderBoard.addActionListener(this);
+		this.add(btnLeaderBoard);
 		
 		// Frame Setup
 		theFrame.setContentPane(this);
@@ -596,6 +910,11 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			imgStart = ImageIO.read(new File(strPath + "start_bg.png"));
 			imgBackground = ImageIO.read(new File(strPath + "general_bg.png"));
 			imgWait = ImageIO.read(new File(strPath + "wait_bg.png"));
+			
+			// imgPickCard = ImageIO.read(new File(strBgPath + "pick_card_bg.png"));
+			// imgDisplay = ImageIO.read(new File(strBgPath + "display_bg.png"));
+			// imgYourTurn = ImageIO.read(new File(strBgPath + "your_turn_bg.png"));
+			// imgGameOver = ImageIO.read(new File(strBgPath + "game_over_bg.png"));
 		}catch(IOException e){
 			System.out.println("Error: Could not load image");
 			e.printStackTrace();
