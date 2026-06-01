@@ -398,24 +398,24 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			String strC = strColors[intC];
 			for(int intN = 0; intN < strNums.length; intN++){
 				String strCard = strC + strNums[intN];
-				String[] strCardData = {strCard, "standard"+strCard+".jpg", "pokemon"+strCard+".jpg","insideout"+strCard+".jpg"};
+				String[] strCardData = {strCard, "standard"+strCard+".png", "pokemon"+strCard+".png","insideout"+strCard+".png"};
 				strDeck[intDeckSize] = strCardData;
 				intDeckSize++;
 			}
 			for(int intS = 0; intS < strSpecials.length; intS++){
 				String strCard = strC + strSpecials[intS];
-				String[] strCardData = {strCard, "standard"+strCard+".jpg", "pokemon"+strCard+".jpg","insideout"+strCard+".jpg"};
+				String[] strCardData = {strCard, "standard"+strCard+".png", "pokemon"+strCard+".png","insideout"+strCard+".png"};
 				strDeck[intDeckSize] = strCardData;
 				intDeckSize++;
 			}
 		}
 		for(int i = 0; i < 4; i++){
-			String[] strWildCardData = {"wild", "standardwild.jpg","pokemonwild.jpg","insideoutwild.jpg"};
+			String[] strWildCardData = {"wild", "standardwild.png","pokemonwild.png","insideoutwild.png"};
 			strDeck[intDeckSize++] = strWildCardData;
 		}
 		
 		for(int i = 0; i < 4; i++){
-			String[] strWild4CardData = {"wilddraw4","standardwilddraw4.jpg","pokemonwilddraw4.jpg","insideoutwilddraw4.jpg"};
+			String[] strWild4CardData = {"wilddraw4","standardwilddraw4.png","pokemonwilddraw4.png","insideoutwilddraw4.png"};
 			strDeck[intDeckSize++] = strWild4CardData;
 		}
 	} 
