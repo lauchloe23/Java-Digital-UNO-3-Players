@@ -29,7 +29,7 @@ public class UnoModel{
 		loadDeck();
 		shuffleDeck();
 		dealStartingHand();
-		//startDiscardPile();
+		DiscardPile();
 		intCurrentPlayer = 0;
 		strWinner = "";
 	}
@@ -117,6 +117,21 @@ public class UnoModel{
 		intDrawPileSize--;
 	}
 	
+	public void DiscardPile(){
+		if(intDrawPileSize > 0){
+			strDicardPile[0] = strDrawPile[0];
+			intDiscardPileSize = 1;
+			
+			for(int intCount = 0; intCount < intDrawPileSize - 1; intCount++){
+				strDrawPile[intCount] = strDrawPile[intCount + 1];
+			}
+			
+			intDrawPileSize--;
+		}	
+		
+		
+		
+	}
 	
 	
 	// Constructor
