@@ -1332,6 +1332,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			// imgDisplay = ImageIO.read(new File(strPath + "display_bg.png"));
 			// imgYourTurn = ImageIO.read(new File(strPath + "your_turn_bg.png"));
 			// imgGameOver = ImageIO.read(new File(strPath + "game_over_bg.png"));
+			// imgFlipFirst = ImageIO.read(new File(strPath + "flip_first_bg.png"));
 			loadDeck();
 			preloadCardImages();
 		}catch(IOException e){
