@@ -16,7 +16,8 @@ public class UnoModel{
 	int intDrawPileSize = 0;
 	int intDiscardPileSize = 0;
 	
-	// Player Hands (index 1: player. Index 2: card. Index 3: card data/value)
+	// Player Hands
+	// index 1: player. Index 2: card. Index 3: card data/value)
 	String[][][] strHands = new String [3][30][4];
 	int[] intHandSizes = new int[3];
 	
@@ -195,6 +196,134 @@ public class UnoModel{
 		}
 	}
 	
+	// play card (removes a card from player's hand to place on discard)
+	public boolean playCard(int intPlayer, int intCardIndex){
+		// index check
+		if(intCardIndex < 0 || intCardIndex >= intHandSizes[intPlayer]){
+			return false;
+		}
+		String[] strCard = strHands[intPlayer][intCardIndex];
+		String strCardName = strCard[0];
+		
+		// validate card play to be place on discard pile
+		if(!isValidPlay(strCardName)){
+			System.out.println("Invalid play: "+strCardName);
+			return false;
+		}
+		
+		// move card to top
+		strDiscardPile[intDiscardPileSize] = strCard;
+		intDiscardPileSize++;
+		
+		// remove card from hand
+		for(int i = intCardIndex; i < intHandSizes[intPlayer] - 1; i++){
+			strHands[intPlayer][i] = strHands[intPlayer][i+1];
+		}
+		intHandSizes[intPlayer]--;
+		
+		// special cards effect
+		applyCardEffect(strCardName);
+		
+		// check
+		if(intHandSizes[intPlayer] == 0){
+			strWinner = strPlayerNames[intPlayer];
+			blnGameOver = true;
+			System.out.println("Winner: "+strWinner);
+			return true;
+		}
+		
+		// next player's turn
+		advanceTurn();
+		return true;
+	}	
+	
+	// if the play is valid
+	public boolean isValidPlay(String strCardName){
+		// wild cards
+		if(strCardName.startsWith("wild")){
+			return true;
+		}
+		if(intDiscardPileSize == 0){
+			return true;
+		}
+		String strTopCard = strDiscardPile[intDiscardPileSize - 1][0];
+		
+		// get color 
+		String strPlayColor = getColor(strCardName);
+		String strTopColor = getColor(strTopCard);
+		
+		// get value
+		String strPlayValue = getValue(strCardName);
+		String strTopValue= getValue(strTopCard);
+		
+		// return based on color & value
+		return strPlayColor.equals(strTopColor) || strPlayValue.equals(strTopValue);
+	}
+	
+	// get color of card
+	public String getColor(String strCardName){
+		if(strCardName.startsWith("red")){
+			return "red";
+		}else if(strCardName.startsWith("blue")){
+			return "blue";
+		}else if(strCardName.startsWith("green")){
+			return "green";
+		}else if(strCardName.startsWith("yellow")){
+			return "yellow";
+		}else{
+			return "wild";
+		}
+	}
+	
+	// get values of cards 
+	public String getValue(String strCardName){
+		String strVal = strCardName.replace("yellow","").replace("green","").replace("blue","").replace("red","");
+		if(strVal.equals("")){
+			strVal = "wild";
+		}
+		return strVal;
+	}
+	
+	// apply card effect (handle special cards)
+	private void applyCardEffect(String strCardName){
+		String strValue = getValue(strCardName);
+		
+		if(strValue.equals("skip")){
+			// skip
+			advanceTurn();
+			System.out.println("Player " + intTurnOrder[intCurrentTurn] + " is skipped!");
+		}else if(strValue.equals("draw2")){
+			// draw 2 cards + lose their turn
+			advanceTurn();
+			int intNextPlayer = intTurnOrder[intCurrentTurn];
+			drawCard(intNextPlayer);
+			drawCard(intNextPlayer);
+			System.out.println("Player " + intNextPlayer + " draws 2 cards and is skipped!");
+			
+			// skip their turn
+			advanceTurn();
+		}else if(strValue.equals("wilddraw4")){
+			// draw 4 cards + loses their turn
+			advanceTurn();
+			int intNextPlayer = intTurnOrder[intCurrentTurn];
+			drawCard(intNextPlayer);
+			drawCard(intNextPlayer);
+			drawCard(intNextPlayer);
+			drawCard(intNextPlayer);
+			System.out.println("Player " + intNextPlayer + " draws 4 cards and is skipped!");
+			advanceTurn();
+		}
+	}
+	
+	// advance turn (next player)
+	public void advanceTurn(){
+		if(blnClockwise){
+			intCurrentTurn = (intCurrentTurn + 1)% intPlayers;
+		}else{
+			intCurrentTurn = (intCurrentTurn + intPlayers - 1)% intPlayers;
+		}
+	}
+	
 	// reshuffle the discard into the draw pile
 	private void reshuffleDiscard(){
 		if(intDiscardPileSize <= 1){
@@ -256,6 +385,7 @@ public class UnoModel{
 		}	
 	}
 	
+	/*
 	private String getCardColor(String strCardName){
 		if(strCardName.startsWith("red")){
 			return "red";
@@ -320,13 +450,49 @@ public class UnoModel{
 		
 		return false;
 		}
+	*/
 	
 	// access method to be used in view file
+	// return player index
 	public int getCurrentPlayer(){
 		return intTurnOrder[intCurrentTurn];
 	}
 	
+	// return card count
+	public int getHandSize(int intPlayer){
+		return intHandSizes[intPlayer];
+	}
+	
+	// return player's hand
+	public String[][] getHand(int intPlayer){
+		return strHands[intPlayer];
+	}	
+	
+	// return top card of discard pile
+	public String[] getTopDiscard(){
+		if(intDiscardPileSize > 0){
+			return strDiscardPile[intDiscardPileSize - 1];
+		}
+		return null;
+	}
+	
+	// return card counts in draw pile
+	public int getDrawPileSize(){
+		return intDrawPileSize;
+	}
+	
+	// return true if game over
+	public boolean isGameOver(){
+		return blnGameOver;
+	}
+	
+	// return winner
+	public String getWinner(){
+		return strWinner;
+	}
+	
 	// Constructor
 	public UnoModel(){	
+		startGame();
 	}
 }
