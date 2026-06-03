@@ -26,6 +26,13 @@ public class UnoModel{
 	int intCurrentTurn = 0;
 	boolean blnClockwise = true;
 	
+	// track which players are eliminated
+	boolean[] blnEliminated = {false, false, false};
+	int intActivePlayers = 3;
+	
+	// wild card chosen color
+	String strWildColor = "";
+	
 	// game setup variables
 	boolean blnGameOver = false;
 	String strWinner = "";
@@ -42,6 +49,11 @@ public class UnoModel{
 		flipFirstCard();
 		strWinner = "";
 		blnGameOver = false;
+		strWildColor = "";
+		intActivePlayers = intPlayers;
+		for(int i = 0; i < intPlayers; i++){
+			blnEliminated[i] = false;
+		}
 	}
 	
 	//loading card decks
@@ -248,6 +260,14 @@ public class UnoModel{
 		}
 		String strTopCard = strDiscardPile[intDiscardPileSize - 1][0];
 		
+		// check against chosen wild color
+		if(strTopCard.startsWith("wild")){
+			if(!strWildColor.equals("")){
+				return getColor(strCardName).equals(strWildColor);
+			}
+			return true;
+		}
+		
 		// get color 
 		String strPlayColor = getColor(strCardName);
 		String strTopColor = getColor(strTopCard);
@@ -316,11 +336,21 @@ public class UnoModel{
 	}
 	
 	// advance turn (next player)
-	public void advanceTurn(){
-		if(blnClockwise){
-			intCurrentTurn = (intCurrentTurn + 1)% intPlayers;
-		}else{
-			intCurrentTurn = (intCurrentTurn + intPlayers - 1)% intPlayers;
+	public void advanceTurn() {
+		int intCount = 0;
+		boolean foundValidPlayer = false;
+
+		while (intCount < intPlayers && !foundValidPlayer) {
+			// move to next player
+			if (blnClockwise) {
+				intCurrentTurn = (intCurrentTurn + 1) % intPlayers;
+			} else {
+				intCurrentTurn = (intCurrentTurn + intPlayers - 1) % intPlayers;
+			}
+			intCount++;
+
+			// stop if the player is NOT eliminated
+			foundValidPlayer = !blnEliminated[intTurnOrder[intCurrentTurn]];
 		}
 	}
 	
@@ -359,17 +389,21 @@ public class UnoModel{
 	// eliminate players when exceed 30 cards in hand
 	// unsure if going to change this game play rule
 	private void eliminatePlayer(int intPlayer){
-		System.out.println(strPlayerNames[intPlayer] + " is eliminated (over " + intMaxCards + " cards)!");
-		int intMinCards = intHandSizes[0];
-		int intWinPlayer = 0;
-		for(int i = 1; i < intPlayers; i++){
-			if(i != intPlayer && intHandSizes[i] < intMinCards){
-				intMinCards = intHandSizes[i];
-				intWinPlayer = i;
+		if(blnEliminated[intPlayer]) return; 
+		blnEliminated[intPlayer] = true;
+		intActivePlayers--;
+		System.out.println(strPlayerNames[intPlayer] + " is eliminated!");
+		
+		// If only one player is left, they win
+		if(intActivePlayers == 1){
+			for(int i = 0; i < intPlayers; i++){
+				if(!blnEliminated[i]){
+					strWinner   = strPlayerNames[i];
+					blnGameOver = true;
+					return;
+				}
 			}
 		}
-		strWinner = strPlayerNames[intWinPlayer];
-		blnGameOver = true;
 	}
 	
 	public void DiscardPile(){
