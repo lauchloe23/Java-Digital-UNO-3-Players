@@ -1,4 +1,4 @@
-package Graphics;
+
 import javax.swing.*;
 import java.awt.event.*;
 import java.awt.*;
@@ -1212,7 +1212,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		blnGameOver = true;
 		setComponentVisibility();
 	}
-	
+
 	// Constructor
 	public UnoView(){
 		// Panel Setup
