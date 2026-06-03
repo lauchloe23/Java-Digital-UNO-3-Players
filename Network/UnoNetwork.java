@@ -14,9 +14,7 @@ public class UnoNetwork implements ActionListener{
 			strLastMessage = ssm.readText();
 
 			if(gameListener != null){
-				gameListener.actionPerformed(
-					new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "UNO_NETWORK_MESSAGE")
-				);
+				gameListener.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "UNO_NETWORK_MESSAGE"));
 			}
 		}
 	}
@@ -118,6 +116,5 @@ public class UnoNetwork implements ActionListener{
     
     
 	}
-
 
 }
