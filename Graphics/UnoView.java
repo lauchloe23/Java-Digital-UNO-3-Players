@@ -1,4 +1,9 @@
 package Graphics;
+//importing other java programs 
+//import Logic.UnoModel;
+//import Network.UnoNetwork;
+
+
 import javax.swing.*;
 import java.awt.event.*;
 import java.awt.*;
@@ -18,6 +23,10 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	final int intMaxCards = 30;
 	final int intStartCards = 7;
 	final int intPerPage = 2;
+	
+	//connecting program files
+	//UnoModel model;
+	//UnoNetwork network;
 
 	// JFrame 
 	JFrame theFrame = new JFrame("UNO");
@@ -1212,7 +1221,16 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		blnGameOver = true;
 		setComponentVisibility();
 	}
+	/*
+	public void setModel(UnoModel model){
+		this.model = model;
+	}
+
+	public void setNetwork(UnoNetwork network){
+		this.network = network;
+	}
 	
+	*/
 	// Constructor
 	public UnoView(){
 		// Panel Setup
