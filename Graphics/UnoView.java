@@ -93,6 +93,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	BufferedImage imgYourTurn = null;
 	BufferedImage imgGameOver = null;
 	BufferedImage imgDecision = null;
+	BufferedImage[] imgAllCards = new BufferedImage[100];
 	
 	// Game Data
 	String strName = "Player";
@@ -126,6 +127,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	// JComponent (game play)
 	JButton btnPrev = createGoldButton("<PREV");
 	JButton btnNext = createGoldButton("Next>");
+	JButton btnContinue = createGoldButton("CONTINUE>");
 	
 	// Action Listener
 	public void actionPerformed(ActionEvent e){
@@ -148,11 +150,15 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		}else if(e.getSource() == btnHelp){
 			blnHelp = !blnHelp;
 			blnLeaderBoard = false;
+			setComponentVisibility();
 		}else if(e.getSource() == btnLeaderBoard){
 			blnLeaderBoard = !blnLeaderBoard;
 			blnHelp = false;
+			setComponentVisibility();
 		}else if(e.getSource() == btnPickUp){
 			drawFromPile();
+		}else if(e.getSource() == btnContinue){
+			fadeToScreen("turn");
 		}else if(e.getSource() == btnPrev){
 			if(intCardPage > 0){
 				intCardPage--;
@@ -206,6 +212,26 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	}
 	public void keyTyped(KeyEvent e){}
 	public void keyReleased(KeyEvent e){}
+	
+	// load card images
+	private void preloadCardImages(){
+		String strCardPath = "../Image/Cards/";
+		for(int i = 0; i < intDeckSize; i++){
+			int intCol = intTheme + 1; // 1=standard 2=pokemon 3=insideout
+			if(intCol >= strDeck[i].length) intCol = 1;
+			try{
+				File f = new File(strCardPath + strDeck[i][intCol]);
+				if(f.exists()){
+					imgAllCards[i] = ImageIO.read(f);
+				}else{
+					imgAllCards[i] = null;
+				}
+			}catch(IOException e){
+				imgAllCards[i] = null;
+			}
+		}
+		System.out.println("Card images preloaded.");
+	}
 	
 	// draw string in center
 	private void drawCenteredString(Graphics2D g2, String strMessage, int intCenterX, int intY){
@@ -319,15 +345,12 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		if(strCard == null){
 			return null;
 		}
-		// 1=standard  2=pokemon  3=insideout
-		int intCol = intTheme + 1;
-		if(intCol >= strCard.length){
-			intCol = 1;  // fall back
+		for(int i = 0; i < intDeckSize; i++){
+			if(strDeck[i][0].equals(strCard[0])){
+				return imgAllCards[i];
+			}
 		}
-		if(intCol >= strCard.length){
-			return null;
-		}
-		return loadCardImage(strCard[intCol]);
+		return null;
 	}
 	
 	private BufferedImage loadCardImage(String strFileName){
@@ -342,13 +365,25 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		return null;
 	}
 
+	private void flipFirstCard(){
+		if(intDrawPileSize > 0){
+			strDiscardPile[intDiscardPileSize] = strDrawPile[0];
+			intDiscardPileSize++;
+			for(int i = 0; i < intDrawPileSize - 1; i++){
+				strDrawPile[i] = strDrawPile[i+1];
+			}
+			intDrawPileSize--;
+			System.out.println("Starting card: " + strDiscardPile[0][0]);
+		}
+	}
 	
 	// Game paint element logic method (when name, theme enters -> it starts)
 	private void startGame(){
-		loadDeck();
+		// loadDeck();
 		shuffleDeck();
 		randomizeTurnOrder();
 		dealStartingHands();
+		flipFirstCard();
 		intCardPage = 0;
 
 		// Local player is index 0 in strPlayNames
@@ -812,11 +847,21 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		// Number of Cards (Other players' card cont)
 		g2.setFont(bigFont);
 		g2.setColor(Color.WHITE);
-		g2.drawString(String.valueOf(intCardCount1), 60, 110);
-		g2.drawString(String.valueOf(intCardCount2), 1120, 110);
 		FontMetrics fm = g2.getFontMetrics();
+		
+		// Opponents at top corners (back of table)
+		int intC2W = fm.stringWidth(String.valueOf(intCardCount2));
 		int intC3W = fm.stringWidth(String.valueOf(intCardCount3));
-		g2.drawString(String.valueOf(intCardCount3), 640 - intC3W/2, 690);
+		g2.drawString(String.valueOf(intCardCount2), 60, 110);
+		g2.drawString(String.valueOf(intCardCount3), intWidth - 60 - intC3W, 110);
+		
+		// local player card display
+		g2.setColor(goldColor);
+		int intC1W = fm.stringWidth(String.valueOf(intCardCount1));
+		g2.drawString(String.valueOf(intCardCount1), 640 - intC1W/2, 690);
+		g2.setFont(bodyFont);
+		g2.setColor(Color.WHITE);
+		drawCenteredString(g2, "Your cards", 640, 712);
 		
 		// Waiting for player
 		g2.setColor(transparentBlack);
@@ -937,6 +982,13 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		g2.setColor(new Color(200, 200, 200));
 		g2.drawString("Draw pile: "    + intDrawPileSize,    1050, 670);
 		g2.drawString("Discard pile: " + intDiscardPileSize, 1050, 690);
+		
+		if(intDiscardPileSize > 0){
+			g2.setFont(bodyFont);
+			g2.setColor(Color.WHITE);
+			g2.drawString("Top card:", 1050, 630);
+			drawCardFace(g2, strDiscardPile[intDiscardPileSize - 1], 1050, 530, 80, 110);
+		}
 	}
 	
 	private void drawGameOver(Graphics2D g2){
@@ -1089,11 +1141,13 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		btnEnterGame.setVisible(blnThemeScreen);
 		
 		// Game screen
+		boolean blnShowGameBtns = blnTurnScreen && !blnHelp && !blnLeaderBoard;
 		btnHelp.setVisible(blnTurnScreen);
-		btnPickUp.setVisible(blnTurnScreen);
+		btnPickUp.setVisible(blnShowGameBtns);
 		btnLeaderBoard.setVisible(blnTurnScreen);
-		btnPrev.setVisible(blnTurnScreen);
-		btnNext.setVisible(blnTurnScreen);
+		btnPrev.setVisible(blnShowGameBtns);
+		btnNext.setVisible(blnShowGameBtns);
+		btnContinue.setVisible(blnDisplayCard);
 		
 		// chat area screen overlay
 		chatInput.setVisible(blnChat && blnTurnScreen);
@@ -1229,6 +1283,12 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		btnNext.addActionListener(this);
 		this.add(btnNext);
 		
+		// cont button
+		btnContinue.setBounds(490, 630, 300, 50);
+		btnContinue.setVisible(false);
+		btnContinue.addActionListener(this);
+		this.add(btnContinue);
+		
 		// chat components
 		chatArea.setBounds(15, 50, 290, 250);
 		chatArea.setFont(bodyFont);
@@ -1268,10 +1328,12 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			imgBackground = ImageIO.read(new File(strPath + "general_bg.png"));
 			imgWait = ImageIO.read(new File(strPath + "wait_bg.png"));
 			
-			// imgPickCard = ImageIO.read(new File(strBgPath + "pick_card_bg.png"));
-			// imgDisplay = ImageIO.read(new File(strBgPath + "display_bg.png"));
-			// imgYourTurn = ImageIO.read(new File(strBgPath + "your_turn_bg.png"));
-			// imgGameOver = ImageIO.read(new File(strBgPath + "game_over_bg.png"));
+			// imgPickCard = ImageIO.read(new File(strPath + "pick_card_bg.png"));
+			// imgDisplay = ImageIO.read(new File(strPath + "display_bg.png"));
+			// imgYourTurn = ImageIO.read(new File(strPath + "your_turn_bg.png"));
+			// imgGameOver = ImageIO.read(new File(strPath + "game_over_bg.png"));
+			loadDeck();
+			preloadCardImages();
 		}catch(IOException e){
 			System.out.println("Error: Could not load image");
 			e.printStackTrace();
