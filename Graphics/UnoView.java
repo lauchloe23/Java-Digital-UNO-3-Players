@@ -397,7 +397,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	
 	private void loadDeck(){
 		intDeckSize = 0;
-		String strCSVPath = "../cards.csv";
+		String strCSVPath = "../Graphics/cards.csv";
 		try{
 			BufferedReader reader = new BufferedReader(new FileReader(strCSVPath));
 			reader.readLine();
