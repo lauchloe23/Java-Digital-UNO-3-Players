@@ -1,3 +1,5 @@
+package Network;
+
 import java.awt.event.*;
 
 public class UnoNetwork implements ActionListener{
@@ -8,13 +10,17 @@ public class UnoNetwork implements ActionListener{
 
 	//Methods
 	public void actionPerformed(ActionEvent evt){
-		if(evt.getSource()==ssm){
+		if(evt.getSource() == ssm){
 			strLastMessage = ssm.readText();
-	
+
+			if(gameListener != null){
+				gameListener.actionPerformed(
+					new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "UNO_NETWORK_MESSAGE")
+				);
+			}
 		}
-	
 	}
-	
+		
 	public String getLastMessage(){
 		return strLastMessage;
 	}
@@ -103,7 +109,7 @@ public class UnoNetwork implements ActionListener{
 
 	//Constructor
 	public UnoNetwork(ActionListener gameListener){
-		gameListener = gameListener;
+		this.gameListener = gameListener;
 	}
 
 	//Main Method
