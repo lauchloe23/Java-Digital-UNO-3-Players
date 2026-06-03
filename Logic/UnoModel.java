@@ -255,6 +255,71 @@ public class UnoModel{
 		}	
 	}
 	
+	private String getCardColor(String strCardName){
+		if(strCardName.startsWith("red")){
+			return "red";
+		}else if(strCardName.startsWith("blue")){
+			return "blue";
+		}else if(strCardName.startsWith("green")){
+			return "green";
+		}else if(strCardName.startsWith("yellow")){
+			return "yellow";
+		}else if(strCardName.startsWith("wild")){
+			return "wild";
+		}
+		return "";
+	}
+
+	private String getCardValue(String strCardName){
+		if(strCardName.startsWith("red")){
+			return strCardName.substring(3);
+		}else if(strCardName.startsWith("blue")){
+			return strCardName.substring(4);
+		}else if(strCardName.startsWith("green")){
+			return strCardName.substring(5);
+		}else if(strCardName.startsWith("yellow")){
+			return strCardName.substring(6);
+		}else if(strCardName.startsWith("wild")){
+			return strCardName;
+		}
+		return strCardName;
+	}
+	
+	public boolean playableCard (int intPlayer, int intCardIndex){
+		if(intPlayer < 0 || intPlayer >=  intPlayers){
+			return false;
+		}
+		
+		if(intCardIndex < 0 || intCardIndex >= intHandSizes[intPlayer]){
+			return false;
+		}
+		if(intDiscardPileSize <= 0){
+			return true;
+		}
+		
+		String strSelectedCard = strHands[intPlayer][intCardIndex][0];
+		String strTopCard = strDiscardPile[intDiscardPileSize - 1][0];
+		
+		if(strSelectedCard.startsWith("wild")){
+			return true;
+		}
+		
+		String strSelectedColor = getCardColor(strSelectedCard);
+		String strTopColor = getCardColor(strTopCard);
+		String strSelectedValue = getCardValue(strSelectedCard);
+		String strTopValue = getCardValue(strTopCard);
+		
+		// card is valid if color or value matches
+		if(strSelectedColor.equals(strTopColor)){
+			return true;
+		}
+		if(strSelectedValue.equals(strTopValue)){
+			return true;
+		}
+		
+		return false;
+		}
+	
 	// access method to be used in view file
 	public int getCurrentPlayer(){
 		return intTurnOrder[intCurrentTurn];
