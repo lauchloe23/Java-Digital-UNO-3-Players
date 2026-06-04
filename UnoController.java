@@ -1,6 +1,7 @@
 import java.awt.event.*;
 
 public class UnoController implements ActionListener{
+	//Properties
 	private UnoModel model;
 	private UnoView view;
 	private UnoNetwork network;
@@ -10,13 +11,58 @@ public class UnoController implements ActionListener{
 	private boolean blnIsHost = false;
 	private boolean blnConnected = false;
 	
-	public UnoController(UnoModel model, UnoView view, UnoNetwork network){
-		this.model = model;
-		this.view = view;
-		this.network = network;
+	//Methods
+	public void actionPerformed(ActionEvent evt){
+		if(evt.getActionCommand() != null && evt.getActionCommand().equals("UNO_NETWORK_MESSAGE")){
+			String strMessage = network.getLastMessage();
+			handleNetworkMessage(strMessage);
+		}
+	}
+	
+	public void handleNetworkMessage(String strMessage){
+		System.out.println("Network Message: " + strMessage);
+		
+		if(view != null){
+			view.processNetworkMessage(strMessage);
+		}
+	}
+	
+	public boolean hostGame(){
+		blnIsHost = true;
+		blnConnected = network.startServer(intDefaultPort);
+		return blnConnected;
+	}
+	
+	public void sendChat(String strPlayerName, String strMessage){
+		if(network != null){
+			network.sendPlayerChat(strPlayerName, strMessage);
+		}
+	}
+	
+	public void startGame(String strPlayerName){
+		model.strPlayerNames[0] = strPlayerName;
+		model.startGame();
+		
+		if(network != null){
+			network.sendJoin(strPlayerName);
+		}
+	}
+	
+	//Controller
+	public UnoController(){
+		model = new UnoModel();
+		view = new UnoView();
+		network = new UnoNetwork(this);
 		
 		// hand controller to view
-		view.controller = this;
+		view.setController(this);
+		view.setModel(model);
+		view.setNetwork(network);
+		
+	}
+	
+	public static void main(String[] args){
+		new UnoController();
 	}
 	
 }
