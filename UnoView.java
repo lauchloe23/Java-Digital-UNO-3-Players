@@ -84,6 +84,16 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	boolean blnHelp = false; // help screen
 	boolean blnLeaderBoard = false; // leaderboard screen
 	boolean blnChat = false; // chat screen
+	boolean blnFlipFirst = false; // show first card
+	boolean blnEliminated = false; // local player eliminated
+	boolean blnWildPicker = false;
+	
+	// elimination tracking
+	boolean[] blnPlayerEliminated = {false, false, false};
+	int intActivePlayers = 3;
+	
+	// wild card chosen color
+	String strWildColor = "";
 	
 	// Image Variables
 	BufferedImage imgStart = null;
@@ -94,6 +104,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	BufferedImage imgYourTurn = null;
 	BufferedImage imgGameOver = null;
 	BufferedImage imgDecision = null;
+	BufferedImage imgEliminated = null;
 	BufferedImage[] imgAllCards = new BufferedImage[100];
 	
 	// Game Data
@@ -130,6 +141,15 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	JButton btnNext = createGoldButton("Next>");
 	JButton btnContinue = createGoldButton("CONTINUE>");
 	
+	// JComponent (wild card color picker)
+	JButton btnWildRed = new JButton("RED");
+	JButton btnWildBlue = new JButton("BLUE"); 
+	JButton btnWildGreen = new JButton("GREEN"); 
+	JButton btnWildYellow = new JButton("YELLOW");
+	
+	// JComponent (Eliminated)
+	JButton btnEliminatedOK = createGoldButton("CONTINUE WATCHING");
+	
 	// Action Listener
 	public void actionPerformed(ActionEvent e){
 		if(e.getSource() == playButton){
@@ -164,6 +184,31 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			if(intCardPage > 0){
 				intCardPage--;
 			}
+		}else if(e.getSource() == btnWildRed){
+			strWildColor = "red";
+			blnWildPicker = false;
+			setComponentVisibility();
+			advanceTurn();
+		}else if(e.getSource() == btnWildBlue){
+			strWildColor = "blue";
+			blnWildPicker = false;
+			setComponentVisibility();
+			advanceTurn();
+		}else if(e.getSource() == btnWildGreen){
+			strWildColor = "green";
+			blnWildPicker = false;
+			setComponentVisibility();
+			advanceTurn();
+		}else if(e.getSource() == btnWildYellow){
+			strWildColor = "yellow";
+			blnWildPicker = false;
+			setComponentVisibility();
+			advanceTurn();
+		}else if(e.getSource() == btnEliminatedOK){
+			blnEliminated = false;
+			blnPlayerEliminated[0] = true;
+			intActivePlayers--;
+			fadeToScreen("wait");
 		}else if(e.getSource() == btnNext){
 			// Total pages = round up (handSize / cardsPerPage)
 			int intTotalPages = (intHandSize + intPerPage - 1) / intPerPage;
@@ -194,7 +239,14 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		if(blnEnterScreen){
 			fadeToScreen("play");
 			// showPlayScreen();
-		}else if(blnTurnScreen && !blnHelp && !blnLeaderBoard){
+		}else if(blnFlipFirst){
+			// adance from flip first screen to first player's turn
+			if(intTurnOrder[intCurrentTurn] == 0){
+				fadeToScreen("turn");
+			}else{
+				fadeToScreen("wait");
+			}
+		}else if(blnTurnScreen && !blnHelp && !blnLeaderBoard && !blnWildPicker){
 			handleCardClick(e.getX(), e.getY());
 		}
 	}
@@ -386,19 +438,20 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		dealStartingHands();
 		flipFirstCard();
 		intCardPage = 0;
-
-		// Local player is index 0 in strPlayNames
-		// If intTurnOrder[0] == 0, local player goes first
-		if(intTurnOrder[intCurrentTurn] == 0){
-			fadeToScreen("turn");
-		}else{
-			fadeToScreen("wait");
+		strWildColor = "";
+		intActivePlayers = 3;
+		
+		for(int i = 0; i < 3; i++){
+			blnPlayerEliminated[i] = false;
 		}
+		blnEliminated = false;
+		blnWildPicker = false;
+		fadeToScreen("flipfirst");
 	}
 	
 	private void loadDeck(){
 		intDeckSize = 0;
-		String strCSVPath = "../Graphics/cards.csv";
+		String strCSVPath = "cards.csv";
 		try{
 			BufferedReader reader = new BufferedReader(new FileReader(strCSVPath));
 			reader.readLine();
@@ -536,8 +589,9 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			intCardCount1 = intHandSize;
 
 			if(intHandSize > intMaxCards){
-				strWinner = getOpponentName();
-				fadeToScreen("gameover");
+				blnEliminated = true;
+				setComponentVisibility();
+				repaint();
 				return;
 			}
 			showDisplayCard();
@@ -569,6 +623,8 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		if(intIndex < 0 || intIndex >= intHandSize){
 			return;
 		}
+		String[] strCard = strPlayHand[intIndex];
+		String strCardName = strCard[0];
 
 		// Move card to discard pile
 		strDiscardPile[intDiscardPileSize] = strPlayHand[intIndex];
@@ -598,11 +654,59 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			fadeToScreen("gameover");
 			return;
 		}
+		
+		if(strCardName.startsWith("wild")){
+			strWildColor = "";
+			blnWildPicker = true;
+			setComponentVisibility();
+			repaint();
+			return;
+		}
 		advanceTurn();
 	}
 	
 	// move to next player
 	private void advanceTurn(){
+		int intCount = 0;
+		boolean searchingForActivePlayer = true;
+
+		while (searchingForActivePlayer){
+			// Move to the next turn based on direction
+			if(blnClockwise){
+				intCurrentTurn = (intCurrentTurn + 1) % 3;
+			} else {
+				intCurrentTurn = (intCurrentTurn + 2) % 3;
+			}
+			intCount++;
+			// stop if the player is not eliminated 
+			searchingForActivePlayer = blnPlayerEliminated[intTurnOrder[intCurrentTurn]] && intCount < 3;
+		}
+		
+		// check if only 1 active player remains
+		int intActive = 0;
+		int intLastActive = 0;
+		for(int i = 0; i < 3; i++){
+			if(!blnPlayerEliminated[i]){ 
+				intActive++; 
+				intLastActive = i; 
+			}
+		}
+		
+		if(intActive == 1){
+			strWinner = strPlayNames[intLastActive];
+			fadeToScreen("gameover");
+			return;
+		}
+		
+		if(blnPlayerEliminated[0]){
+			fadeToScreen("wait");
+		}else if(intTurnOrder[intCurrentTurn] == 0){
+			fadeToScreen("turn");
+		}else{
+			fadeToScreen("wait");
+		}
+		
+		/*
 		if(blnClockwise){
 			intCurrentTurn = (intCurrentTurn + 1) % 3;
 		}else{
@@ -614,6 +718,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		}else{
 			fadeToScreen("wait");
 		}
+		*/
 	}
 	
 	private String getOpponentName(){
@@ -699,6 +804,10 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			showDisplayCard();
 		}else if(strTarget.equals("gameover")){
 			showGameOver(strWinner);
+		}else if(strTarget.equals("flipfirst")){
+			showFlipFirst();
+		}else if(strTarget.equals("eliminated")){
+			showEliminated();
 		}
 	}
 	
@@ -730,6 +839,10 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			drawYourTurn(g2);
 		}else if(blnGameOver){
 			drawGameOver(g2);
+		}else if(blnFlipFirst){
+			drawFlipFirst(g2);
+		}else if(blnEliminated){
+			drawEliminated(g2);
 		}
 		
 		// Overlay Screen
@@ -741,6 +854,9 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		}
 		if(blnChat){
 			drawChat(g2);
+		}
+		if(blnWildPicker){
+			drawWildPicker(g2);
 		}
 		
 		// fade overlay
@@ -1012,6 +1128,71 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		// Decorations/Animation Row
 	}
 	
+	// show the first flipped card
+	private void drawFlipFirst(Graphics2D g2){
+		drawBackground(g2);
+		g2.setColor(transparentBlack);
+		g2.fillRoundRect(200, 80, 880, 560, 20, 20);
+		g2.setFont(titleFont);
+		g2.setColor(Color.WHITE);
+		drawCenteredString(g2, "STARTING CARD", 640, 140);
+		g2.setFont(bodyFont);
+		g2.setColor(new Color(200, 200, 200));
+		drawCenteredString(g2, "This is the first card on the discard pile.", 640, 180);
+		if(intDiscardPileSize > 0){
+			drawCardFace(g2, strDiscardPile[0], 510, 210, 260, 360);
+			g2.setFont(headerFont);
+			g2.setColor(goldColor);
+			drawCenteredString(g2, strDiscardPile[0][0].toUpperCase(), 640, 600);
+		}
+		g2.setFont(bodyFont);
+		g2.setColor(new Color(200, 200, 200));
+		drawCenteredString(g2, "Click anywhere to begin", 640, 650);
+	}
+	
+	// Show eliminated screen when local player exceeds 30 cards
+	private void drawEliminated(Graphics2D g2){
+		if(imgEliminated != null){
+			g2.drawImage(imgEliminated, 0, 0, intWidth, intHeight, null);
+		}else{
+			drawBackground(g2);
+		}
+		g2.setColor(new Color(150, 0, 0, 210));
+		g2.fillRoundRect(240, 160, 800, 400, 20, 20);
+		g2.setColor(unoRed);
+		g2.setStroke(new BasicStroke(4));
+		g2.drawRoundRect(240, 160, 800, 400, 20, 20);
+		g2.setStroke(new BasicStroke(1));
+		g2.setFont(titleFont);
+		g2.setColor(Color.WHITE);
+		drawCenteredString(g2, "YOU ARE ELIMINATED!", 640, 250);
+		g2.setFont(headerFont);
+		g2.setColor(new Color(255, 180, 180));
+		drawCenteredString(g2, "You exceeded " + intMaxCards + " cards in your hand.", 640, 310);
+		g2.setFont(bodyFont);
+		g2.setColor(Color.WHITE);
+		drawCenteredString(g2, "The remaining players will continue without you.", 640, 360);
+		drawCenteredString(g2, "Click CONTINUE WATCHING to spectate.", 640, 390);
+	}
+	
+	// Wild color picker overlay
+	private void drawWildPicker(Graphics2D g2){
+		g2.setColor(new Color(0, 0, 0, 190));
+		g2.fillRect(0, 0, intWidth, intHeight);
+		g2.setColor(new Color(20, 20, 60, 240));
+		g2.fillRoundRect(340, 200, 600, 320, 20, 20);
+		g2.setColor(goldColor);
+		g2.setStroke(new BasicStroke(2));
+		g2.drawRoundRect(340, 200, 600, 320, 20, 20);
+		g2.setStroke(new BasicStroke(1));
+		g2.setFont(titleFont);
+		g2.setColor(Color.WHITE);
+		drawCenteredString(g2, "CHOOSE A COLOR", 640, 260);
+		g2.setFont(bodyFont);
+		g2.setColor(new Color(200, 200, 200));
+		drawCenteredString(g2, "Pick the color for the next player to match", 640, 295);
+	}
+	
 	private void drawHelp(Graphics2D g2){
 		// Overlay background
 		g2.setColor(new Color(0, 0, 0, 180));
@@ -1150,6 +1331,15 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		btnNext.setVisible(blnShowGameBtns);
 		btnContinue.setVisible(blnDisplayCard);
 		
+		// Wild color picker buttons
+		btnWildRed.setVisible(blnWildPicker);
+		btnWildBlue.setVisible(blnWildPicker);
+		btnWildGreen.setVisible(blnWildPicker);
+		btnWildYellow.setVisible(blnWildPicker);
+		
+		// Eliminated screen button
+		btnEliminatedOK.setVisible(blnEliminated);
+		
 		// chat area screen overlay
 		chatInput.setVisible(blnChat && blnTurnScreen);
 		chatArea.setVisible(blnChat && blnTurnScreen);
@@ -1167,6 +1357,8 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		blnGameOver = false;
 		blnHelp = false;
 		blnLeaderBoard = false;
+		blnFlipFirst   = false;
+		blnEliminated  = false;
 	}
 	
 	// Translate Screen
@@ -1210,6 +1402,18 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		this.strWinner = strWinner;
 		resetScreens();
 		blnGameOver = true;
+		setComponentVisibility();
+	}
+	
+	public void showFlipFirst(){
+		resetScreens();
+		blnFlipFirst = true;
+		setComponentVisibility();
+	}
+	
+	public void showEliminated(){
+		// overlay on top of current screen
+		blnEliminated = true;
 		setComponentVisibility();
 	}
 
@@ -1256,19 +1460,19 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		this.add(btnEnterGame);
 		
 		// Help button
-		btnHelp.setBounds(30, 230, 210, 45);
+		btnHelp.setBounds(1040, 230, 210, 45);
 		btnHelp.setVisible(false);
 		btnHelp.addActionListener(this);
 		this.add(btnHelp);
 
 		// Pick up a card button
-		btnPickUp.setBounds(30, 290, 210, 45);
+		btnPickUp.setBounds(1040, 290, 210, 45);
 		btnPickUp.setVisible(false);
 		btnPickUp.addActionListener(this);
 		this.add(btnPickUp);
 
 		// Leaderboard button
-		btnLeaderBoard.setBounds(30, 350, 210, 45);
+		btnLeaderBoard.setBounds(1040, 350, 210, 45);
 		btnLeaderBoard.setVisible(false);
 		btnLeaderBoard.addActionListener(this);
 		this.add(btnLeaderBoard);
@@ -1289,6 +1493,49 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		btnContinue.setVisible(false);
 		btnContinue.addActionListener(this);
 		this.add(btnContinue);
+		
+		// Wild color picker buttons
+		btnWildRed.setBackground(new Color(220, 50, 50));
+		btnWildRed.setForeground(Color.WHITE);
+		btnWildRed.setFont(buttonFont);
+		btnWildRed.setFocusPainted(false);
+		btnWildRed.setBounds(370, 320, 120, 120);
+		btnWildRed.setVisible(false);
+		btnWildRed.addActionListener(this);
+		this.add(btnWildRed);
+		
+		btnWildBlue.setBackground(new Color(30, 100, 200));
+		btnWildBlue.setForeground(Color.WHITE);
+		btnWildBlue.setFont(buttonFont);
+		btnWildBlue.setFocusPainted(false);
+		btnWildBlue.setBounds(510, 320, 120, 120);
+		btnWildBlue.setVisible(false);
+		btnWildBlue.addActionListener(this);
+		this.add(btnWildBlue);
+		
+		btnWildGreen.setBackground(new Color(30, 160, 80));
+		btnWildGreen.setForeground(Color.WHITE);
+		btnWildGreen.setFont(buttonFont);
+		btnWildGreen.setFocusPainted(false);
+		btnWildGreen.setBounds(650, 320, 120, 120);
+		btnWildGreen.setVisible(false);
+		btnWildGreen.addActionListener(this);
+		this.add(btnWildGreen);
+		
+		btnWildYellow.setBackground(new Color(230, 190, 30));
+		btnWildYellow.setForeground(Color.WHITE);
+		btnWildYellow.setFont(buttonFont);
+		btnWildYellow.setFocusPainted(false);
+		btnWildYellow.setBounds(790, 320, 120, 120);
+		btnWildYellow.setVisible(false);
+		btnWildYellow.addActionListener(this);
+		this.add(btnWildYellow);
+		
+		// Eliminated OK button
+		btnEliminatedOK.setBounds(440, 440, 400, 55);
+		btnEliminatedOK.setVisible(false);
+		btnEliminatedOK.addActionListener(this);
+		this.add(btnEliminatedOK);
 		
 		// chat components
 		chatArea.setBounds(15, 50, 290, 250);
@@ -1323,24 +1570,24 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		timer.start();
 		
 		// Image
-		String strPath = "../Image/Background/";
+		String strPath = "Image/Background/";
 		try{
 			imgStart = ImageIO.read(new File(strPath + "start_bg.png"));
 			imgBackground = ImageIO.read(new File(strPath + "general_bg.png"));
 			imgWait = ImageIO.read(new File(strPath + "wait_bg.png"));
-			
-			// imgPickCard = ImageIO.read(new File(strPath + "pick_card_bg.png"));
-			// imgDisplay = ImageIO.read(new File(strPath + "display_bg.png"));
-			// imgYourTurn = ImageIO.read(new File(strPath + "your_turn_bg.png"));
-			// imgGameOver = ImageIO.read(new File(strPath + "game_over_bg.png"));
-			// imgFlipFirst = ImageIO.read(new File(strPath + "flip_first_bg.png"));
+			imgPickCard   = ImageIO.read(new File(strPath + "pick_card_bg.png"));
+			imgDisplay    = ImageIO.read(new File(strPath + "display_bg.png"));
+			imgYourTurn   = ImageIO.read(new File(strPath + "your_turn_bg.png"));
+			imgGameOver   = ImageIO.read(new File(strPath + "game_over_bg.png"));
+			imgEliminated = ImageIO.read(new File(strPath + "eliminated_bg.png"));
 			loadDeck();
 			preloadCardImages();
 		}catch(IOException e){
 			System.out.println("Error: Could not load image");
 			e.printStackTrace();
 		}
-	
+		loadDeck();
+		preloadCardImages();
 	}
 	
 	// Main Method
