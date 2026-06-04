@@ -42,18 +42,18 @@ public class UnoModel{
 	
 	// Methods
 	public void startGame(){
+		strWildColor = ""; 
+		strWinner = "";
+		blnGameOver = false;
+		intActivePlayers = intPlayers;
+		for(int i = 0; i < intPlayers; i++){
+			blnEliminated[i] = false;
+		}
 		loadDeck();
 		shuffleDeck();
 		randomizeTurnOrder();
 		dealStartingHands();
 		flipFirstCard();
-		strWinner = "";
-		blnGameOver = false;
-		strWildColor = "";
-		intActivePlayers = intPlayers;
-		for(int i = 0; i < intPlayers; i++){
-			blnEliminated[i] = false;
-		}
 	}
 	
 	//loading card decks
@@ -62,6 +62,7 @@ public class UnoModel{
 		// try & catch reading csv file
 		try{
 			BufferedReader reader = new BufferedReader(new FileReader("cards.csv"));
+			reader.readLine(); 
 			String strLine;
 			//reading & adding cards from csv file
 			while((strLine = reader.readLine()) != null){
