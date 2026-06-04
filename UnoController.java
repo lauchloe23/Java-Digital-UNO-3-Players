@@ -33,6 +33,12 @@ public class UnoController implements ActionListener{
 		return blnConnected;
 	}
 	
+	public boolean joinGame(String strIP){
+		blnIsHost = false;
+		blnConnected = network.connectServer(strIP, intDefaultPort);
+		return blnConnected;
+	}
+	
 	public void sendChat(String strPlayerName, String strMessage){
 		if(network != null){
 			network.sendPlayerChat(strPlayerName, strMessage);

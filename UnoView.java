@@ -138,6 +138,9 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	JButton btnChat = createGoldButton("CHAT");
 	
 	// JComponent (Chat)
+	JButton btnHost = createGoldButton("HOST GAME");
+	JButton btnJoin = createGoldButton("JOIN GAME");
+	JTextField ipField = new JTextField("127.0.0.1");
 	JTextField chatInput = new JTextField();
 	JTextArea chatArea = new JTextArea();
 	
@@ -240,10 +243,32 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				}
 				startGame();
 			}
+		}else if(e.getSource() == btnHost){
+			if(controller != null){
+				boolean blnWorked = controller.hostGame();
+				if(blnWorked){
+					chatArea.append("[GAME MESSAGE] Hosting game on port 5555\n");
+				}else{
+					chatArea.append("[GAME MESSAGE] Could not host game\n");
+				}
+			}
+
+		}else if(e.getSource() == btnJoin){
+			String strIP = ipField.getText().trim();
+
+			if(controller != null && !strIP.equals("")){
+				boolean blnWorked = controller.joinGame(strIP);
+				if(blnWorked){
+					chatArea.append("[GAME MESSAGE] Connected to host: " + strIP + "\n");
+				}else{
+					chatArea.append("[GAME MESSAGE] Could not connect to host\n");
+				}
+				
+			}
 		}else if(e.getSource() == chatInput){
 			String strMsg = chatInput.getText().trim();
 			if(!strMsg.equals("")){
-				chatArea.append(strName + ": " + strMsg + "\n");
+				chatArea.append("[CHAT] "+ strName + ": " + strMsg + "\n");
 					
 				if(controller != null){
 					controller.sendChat(strName, strMsg);
@@ -1375,6 +1400,8 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	
 	// Display of JButton
 	private void setComponentVisibility(){
+		
+		boolean blnGameplayScreen = blnTurnScreen || blnWaitScreen || blnDisplayCard || blnPickCard;
 		// Play screen
 		playButton.setVisible(blnPlayScreen);
 		
@@ -1384,6 +1411,10 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		btnInsideOut.setVisible(blnThemeScreen);
 		nameField.setVisible(blnThemeScreen);
 		btnEnterGame.setVisible(blnThemeScreen);
+		//host/join buttons
+		btnHost.setVisible(blnThemeScreen);
+		btnJoin.setVisible(blnThemeScreen);
+		ipField.setVisible(blnThemeScreen);
 		
 		// Game screen
 		boolean blnShowGameBtns = blnTurnScreen && !blnHelp && !blnLeaderBoard;
@@ -1393,7 +1424,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		btnPrev.setVisible(blnShowGameBtns);
 		btnNext.setVisible(blnShowGameBtns);
 		btnContinue.setVisible(blnDisplayCard);
-		btnChat.setVisible(blnTurnScreen);
+		btnChat.setVisible(blnGameplayScreen);
 		
 		// Wild color picker buttons
 		btnWildRed.setVisible(blnWildPicker);
@@ -1496,8 +1527,14 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	public void processNetworkMessage(String strMessage){
 		if(strMessage.startsWith("[CHAT]")){
 			chatArea.append(strMessage + "\n");
+			blnChat = true;
+			setComponentVisibility();
+			repaint();
 		}else if(strMessage.startsWith("[GAME MESSAGE]")){
-			System.out.println(strMessage);
+			chatArea.append(strMessage + "\n");
+			blnChat = true;
+			setComponentVisibility();
+			repaint();
 		}else if(strMessage.startsWith("GAMEOVER")){
 			showGameOver(strMessage);
 		}
@@ -1550,6 +1587,24 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		btnHelp.setVisible(false);
 		btnHelp.addActionListener(this);
 		this.add(btnHelp);
+
+		//Host game button
+		btnHost.setBounds(340, 610, 180, 40);
+		btnHost.setVisible(false);
+		btnHost.addActionListener(this);
+		this.add(btnHost);
+		
+		//Join game Button
+		btnJoin.setBounds(760, 610, 180, 40);
+		btnJoin.setVisible(false);
+		btnJoin.addActionListener(this);
+		this.add(btnJoin);
+		
+		//Ip address 
+		ipField.setBounds(535, 610, 210, 40);
+		ipField.setVisible(false);
+		this.add(ipField);
+		
 
 		// Pick up a card button
 		btnPickUp.setBounds(1040, 290, 210, 45);
