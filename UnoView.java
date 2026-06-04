@@ -1,4 +1,3 @@
-
 import javax.swing.*;
 import java.awt.event.*;
 import java.awt.*;
@@ -21,6 +20,11 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 
 	// JFrame 
 	JFrame theFrame = new JFrame("UNO");
+	
+	// connect files
+	UnoController controller;
+	UnoModel model;
+	UnoNetwork network;
 	
 	// Deck & Cards Array 
 	// 100 cards in a deck
@@ -166,6 +170,9 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			if(!strTyped.equals("")){
 				strName = strTyped;
 				strPlayNames[0] = strName;
+				if(controller != null){
+					controller.startGame(strName);
+				}
 				startGame();
 			}
 		}else if(e.getSource() == btnHelp){
@@ -221,15 +228,22 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			if(!strTyped.equals("")){
 				strName = strTyped;
 				strPlayNames[0] = strName;
+				if(controller != null){
+					controller.startGame(strName);
+				}
 				startGame();
 			}
 		}else if(e.getSource() == chatInput){
 			String strMsg = chatInput.getText().trim();
 			if(!strMsg.equals("")){
-					chatArea.append(strName + ": " + strMsg + "\n");
-					chatInput.setText("");
-					// need to send via socket to other players
-				}
+				chatArea.append(strName + ": " + strMsg + "\n");
+					
+				if(controller != null){
+					controller.sendChat(strName, strMsg);
+				}	
+				chatInput.setText("");
+				// need to send via socket to other players
+			}
 		}
 		repaint();
 	}
@@ -1416,6 +1430,28 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		blnEliminated = true;
 		setComponentVisibility();
 	}
+	
+	public void setController(UnoController controller){
+		this.controller = controller;
+	}
+	
+	public void setModel(UnoModel model){
+		this.model = model;
+	}
+	
+	public void setNetwork(UnoNetwork network){
+		this.network = network;
+	}
+	
+	public void processNetworkMessage(String strMessage){
+		if(strMessage.startsWith("[CHAT]")){
+			chatArea.append(strMessage + "\n");
+		}else if(strMessage.startsWith("[GAME MESSAGE]")){
+			System.out.println(strMessage);
+		}else if(strMessage.startsWith("GAMEOVER")){
+			showGameOver(strMessage);
+		}
+	}
 
 	// Constructor
 	public UnoView(){
@@ -1591,8 +1627,10 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	}
 	
 	// Main Method
+	/*
 	public static void main(String[] args){
 		new UnoView();
 	}
+	*/
 	
 }
