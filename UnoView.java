@@ -324,6 +324,8 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		button.setOpaque(true);
 		button.setContentAreaFilled(true);
+		button.setBorderPainted(false);
+		
 		// button.addMouseListener(this);
 		return button;
 	}
