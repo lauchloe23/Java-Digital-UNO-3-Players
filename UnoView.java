@@ -135,6 +135,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	JButton btnHelp = createGoldButton("HELP");
 	JButton btnPickUp = createGoldButton("PICK UP A CARD");
 	JButton btnLeaderBoard = createGoldButton("LEADERBOARD");
+	JButton btnChat = createGoldButton("CHAT");
 	
 	// JComponent (Chat)
 	JTextField chatInput = new JTextField();
@@ -177,6 +178,12 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			}
 		}else if(e.getSource() == btnHelp){
 			blnHelp = !blnHelp;
+			blnLeaderBoard = false;
+			blnChat = false;
+			setComponentVisibility();
+		}else if(e.getSource() == btnChat){
+			blnChat = !blnChat;
+			blnHelp = false;
 			blnLeaderBoard = false;
 			setComponentVisibility();
 		}else if(e.getSource() == btnLeaderBoard){
@@ -282,7 +289,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	
 	// load card images
 	private void preloadCardImages(){
-		String strCardPath = "../Image/Cards/";
+		String strCardPath = "Image/Cards/";
 		for(int i = 0; i < intDeckSize; i++){
 			int intCol = intTheme + 1; // 1=standard 2=pokemon 3=insideout
 			if(intCol >= strDeck[i].length) intCol = 1;
@@ -422,7 +429,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	
 	private BufferedImage loadCardImage(String strFileName){
 		try{
-			File f = new File("../Image/Cards/" + strFileName);
+			File f = new File("Image/Cards/" + strFileName);
 			if(f.exists()){
 				return ImageIO.read(f);
 			}
@@ -446,20 +453,60 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	
 	// Game paint element logic method (when name, theme enters -> it starts)
 	private void startGame(){
-		// loadDeck();
-		shuffleDeck();
-		randomizeTurnOrder();
-		dealStartingHands();
-		flipFirstCard();
+		if(model != null){
+			// Pull all game state from the model
+			intDrawPileSize = model.intDrawPileSize;
+			for(int i = 0; i < intDrawPileSize; i++){
+				strDrawPile[i] = model.strDrawPile[i];
+			}
+			// Copy discard pile
+			intDiscardPileSize = model.intDiscardPileSize;
+			for(int i = 0; i < intDiscardPileSize; i++){
+				strDiscardPile[i] = model.strDiscardPile[i];
+			}
+			// Copy local player hand (index 0)
+			intHandSize = model.intHandSizes[0];
+			for(int i = 0; i < intHandSize; i++){
+				strPlayHand[i] = model.strHands[0][i];
+			}
+			// Copy turn order
+			for(int i = 0; i < 3; i++){
+				intTurnOrder[i] = model.intTurnOrder[i];
+			}
+			intCurrentTurn = model.intCurrentTurn;
+			blnClockwise = model.blnClockwise;
+			// Copy card counts
+			intCardCount1 = model.intHandSizes[0];
+			intCardCount2 = model.intHandSizes[1];
+			intCardCount3 = model.intHandSizes[2];
+			// Copy deck for image lookup
+			intDeckSize = model.intDeckSize;
+			for(int i = 0; i < intDeckSize; i++){
+				strDeck[i] = model.strDeck[i];
+			}
+			// Reset elimination state
+			for(int i = 0; i < 3; i++){
+				blnPlayerEliminated[i] = model.blnEliminated[i];
+			}
+			intActivePlayers = model.intActivePlayers;
+		} else {
+			// fallback if model not connected
+			shuffleDeck();
+			randomizeTurnOrder();
+			dealStartingHands();
+			flipFirstCard();
+			intCardCount2 = intStartCards;
+			intCardCount3 = intStartCards;
+			for(int i = 0; i < 3; i++){
+				blnPlayerEliminated[i] = false;
+			}
+			intActivePlayers = 3;
+		}
 		intCardPage = 0;
 		strWildColor = "";
-		intActivePlayers = 3;
-		
-		for(int i = 0; i < 3; i++){
-			blnPlayerEliminated[i] = false;
-		}
 		blnEliminated = false;
 		blnWildPicker = false;
+		preloadCardImages(); // reload images with updated deck + theme
 		fadeToScreen("flipfirst");
 	}
 	
@@ -1344,6 +1391,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		btnPrev.setVisible(blnShowGameBtns);
 		btnNext.setVisible(blnShowGameBtns);
 		btnContinue.setVisible(blnDisplayCard);
+		btnChat.setVisible(blnTurnScreen);
 		
 		// Wild color picker buttons
 		btnWildRed.setVisible(blnWildPicker);
@@ -1513,6 +1561,12 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		btnLeaderBoard.addActionListener(this);
 		this.add(btnLeaderBoard);
 		
+		// Chat button
+		btnChat.setBounds(1040, 410, 210, 45);
+        btnChat.setVisible(false);
+        btnChat.addActionListener(this);
+        this.add(btnChat);
+        
 		// previous/next buttons
 		btnPrev.setBounds(320, 575, 130, 42);
 		btnPrev.setVisible(false);
@@ -1616,8 +1670,6 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			imgYourTurn = ImageIO.read(new File(strPath + "your_turn_bg.png"));
 			imgGameOver = ImageIO.read(new File(strPath + "game_over_bg.png"));
 			imgEliminated = ImageIO.read(new File(strPath + "eliminated_bg.png"));
-			loadDeck();
-			preloadCardImages();
 		}catch(IOException e){
 			System.out.println("Error: Could not load image");
 			e.printStackTrace();

@@ -163,8 +163,8 @@ public class UnoModel{
 		}
 		
 		//dealing starting number of cards to each player
-		for(int intCard = 0; intCard < intStartCards; intCard++){
-			for(int intPlayer = 0; intPlayer < intPlayers; intPlayer++){
+		for(int intPlayer = 0; intPlayer < intPlayers; intPlayer++){
+			for(int intCard = 0; intCard < intStartCards; intCard++){
 				drawCard(intPlayer);
 			}
 		}
@@ -191,11 +191,6 @@ public class UnoModel{
 		}
 		
 		if(blnEliminated[intPlayer]){
-			return;
-		}
-		
-		if(intHandSizes[intPlayer] >= intMaxCards){
-			eliminatePlayer(intPlayer);
 			return;
 		}
 		
@@ -265,11 +260,14 @@ public class UnoModel{
 			return true;
 		}
 		
+		if(strCardName.startsWith("wild")){
+			strWildColor = "";
+			return true;
+		}
+		
 		// special cards effect
 		applyCardEffect(strCardName);
-		
 		// next player's turn
-		//advanceTurn();
 		return true;
 	}	
 	
@@ -333,14 +331,11 @@ public class UnoModel{
 		String strValue = getValue(strCardName);
 		
 		if(strValue.equals("skip")){
-			// skip
 			//moves to the skipped player
+			advanceTurn(); 
+			System.out.println(strPlayerNames[intTurnOrder[intCurrentTurn]] + " is skipped!");
 			advanceTurn();
 			
-			//move again to actual next player
-			advanceTurn();
-			
-			System.out.println("Player " + intTurnOrder[intCurrentTurn] + " is skipped!");
 		}else if(strValue.equals("draw2")){
 			// draw 2 cards + lose their turn
 			advanceTurn();
@@ -384,6 +379,11 @@ public class UnoModel{
 			// stop if the player is NOT eliminated
 			foundValidPlayer = !blnEliminated[intTurnOrder[intCurrentTurn]];
 		}
+	}
+	
+	public void advanceTurnAfterWild(String strColor){
+		strWildColor = strColor;
+		advanceTurn();
 	}
 	
 	// reshuffle the discard into the draw pile
@@ -438,6 +438,7 @@ public class UnoModel{
 		}
 	}
 	
+	/*
 	public void DiscardPile(){
 		if(intDrawPileSize > 0){
 			strDiscardPile[0] = strDrawPile[0];
@@ -450,6 +451,7 @@ public class UnoModel{
 			intDrawPileSize--;
 		}	
 	}
+	*/
 	
 	/*
 	private String getCardColor(String strCardName){
