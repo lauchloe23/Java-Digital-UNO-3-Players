@@ -361,6 +361,7 @@ public class UnoModel{
 			drawCard(intNextPlayer);
 			System.out.println("Player " + intNextPlayer + " draws 4 cards and is skipped!");
 			advanceTurn();
+			
 		}else{
 			advanceTurn();
 		}
@@ -518,6 +519,35 @@ public class UnoModel{
 	*/
 	
 	// access method to be used in view file
+	
+	//set wild card colour
+	public void setWildColor(String strColor){
+		strWildColor = strColor;
+	}
+	
+	//get wild card colour
+	public String getWildColor(){
+		return strWildColor;
+	}
+	
+	public String getTopCardName(){
+		if(intDiscardPileSize > 0){
+			return strDiscardPile[intDiscardPileSize - 1][0];
+		}
+		return "";
+	}
+	
+	public String getGameStateMessage(){
+		return "STATE|" +
+			getCurrentPlayer() + "|" +
+			getTopCardName() + "|" +
+			intHandSizes[0] + "|" +
+			intHandSizes[1] + "|" +
+			intHandSizes[2] + "|" +
+			blnGameOver + "|" +
+			strWinner;
+	}
+	
 	// return player index
 	public int getCurrentPlayer(){
 		return intTurnOrder[intCurrentTurn];
