@@ -77,8 +77,10 @@ public class UnoModel{
 			}	
 			reader.close();
 			System.out.println("Deck loaded: "+ intDeckSize+" card");
+			
 		}catch(Exception e){
 			System.out.println("Could not load cards");
+			buildFallbackDeck();
 		}
 	}
 	
@@ -184,6 +186,19 @@ public class UnoModel{
 	//drawing cards
 	// take top card from draw pil & reshuffle discard into draw pil if low/run out of draw pile
 	public void drawCard(int intPlayer){
+		if(intPlayer < 0 || intPlayer >= intPlayers){
+			return;
+		}
+		
+		if(blnEliminated[intPlayer]){
+			return;
+		}
+		
+		if(intHandSizes[intPlayer] >= intMaxCards){
+			eliminatePlayer(intPlayer);
+			return;
+		}
+		
 		if(intDrawPileSize <= 0){
 			reshuffleDiscard();
 		}
@@ -210,6 +225,15 @@ public class UnoModel{
 	
 	// play card (removes a card from player's hand to place on discard)
 	public boolean playCard(int intPlayer, int intCardIndex){
+		
+		if(intPlayer < 0 || intPlayer >= intPlayers){
+			return false;
+		}
+		
+		if(blnEliminated[intPlayer]){
+			return false;
+		}
+		
 		// index check
 		if(intCardIndex < 0 || intCardIndex >= intHandSizes[intPlayer]){
 			return false;
@@ -233,9 +257,6 @@ public class UnoModel{
 		}
 		intHandSizes[intPlayer]--;
 		
-		// special cards effect
-		applyCardEffect(strCardName);
-		
 		// check
 		if(intHandSizes[intPlayer] == 0){
 			strWinner = strPlayerNames[intPlayer];
@@ -244,8 +265,11 @@ public class UnoModel{
 			return true;
 		}
 		
+		// special cards effect
+		applyCardEffect(strCardName);
+		
 		// next player's turn
-		advanceTurn();
+		//advanceTurn();
 		return true;
 	}	
 	
@@ -310,7 +334,12 @@ public class UnoModel{
 		
 		if(strValue.equals("skip")){
 			// skip
+			//moves to the skipped player
 			advanceTurn();
+			
+			//move again to actual next player
+			advanceTurn();
+			
 			System.out.println("Player " + intTurnOrder[intCurrentTurn] + " is skipped!");
 		}else if(strValue.equals("draw2")){
 			// draw 2 cards + lose their turn
@@ -331,6 +360,9 @@ public class UnoModel{
 			drawCard(intNextPlayer);
 			drawCard(intNextPlayer);
 			System.out.println("Player " + intNextPlayer + " draws 4 cards and is skipped!");
+			advanceTurn();
+			
+		}else{
 			advanceTurn();
 		}
 	}
@@ -487,6 +519,35 @@ public class UnoModel{
 	*/
 	
 	// access method to be used in view file
+	
+	//set wild card colour
+	public void setWildColor(String strColor){
+		strWildColor = strColor;
+	}
+	
+	//get wild card colour
+	public String getWildColor(){
+		return strWildColor;
+	}
+	
+	public String getTopCardName(){
+		if(intDiscardPileSize > 0){
+			return strDiscardPile[intDiscardPileSize - 1][0];
+		}
+		return "";
+	}
+	
+	public String getGameStateMessage(){
+		return "STATE|" +
+			getCurrentPlayer() + "|" +
+			getTopCardName() + "|" +
+			intHandSizes[0] + "|" +
+			intHandSizes[1] + "|" +
+			intHandSizes[2] + "|" +
+			blnGameOver + "|" +
+			strWinner;
+	}
+	
 	// return player index
 	public int getCurrentPlayer(){
 		return intTurnOrder[intCurrentTurn];
@@ -527,6 +588,6 @@ public class UnoModel{
 	
 	// Constructor
 	public UnoModel(){	
-		startGame();
+		//startGame();
 	}
 }
