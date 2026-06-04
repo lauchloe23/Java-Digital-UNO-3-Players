@@ -1611,10 +1611,10 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			imgStart = ImageIO.read(new File(strPath + "start_bg.png"));
 			imgBackground = ImageIO.read(new File(strPath + "general_bg.png"));
 			imgWait = ImageIO.read(new File(strPath + "wait_bg.png"));
-			imgPickCard   = ImageIO.read(new File(strPath + "pick_card_bg.png"));
-			imgDisplay    = ImageIO.read(new File(strPath + "display_bg.png"));
-			imgYourTurn   = ImageIO.read(new File(strPath + "your_turn_bg.png"));
-			imgGameOver   = ImageIO.read(new File(strPath + "game_over_bg.png"));
+			imgPickCard = ImageIO.read(new File(strPath + "pick_card_bg.png"));
+			imgDisplay = ImageIO.read(new File(strPath + "display_bg.png"));
+			imgYourTurn = ImageIO.read(new File(strPath + "your_turn_bg.png"));
+			imgGameOver = ImageIO.read(new File(strPath + "game_over_bg.png"));
 			imgEliminated = ImageIO.read(new File(strPath + "eliminated_bg.png"));
 			loadDeck();
 			preloadCardImages();
@@ -1627,10 +1627,9 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	}
 	
 	// Main Method
-	/*
+	
 	public static void main(String[] args){
 		new UnoView();
 	}
-	*/
 	
 }
