@@ -3,7 +3,7 @@ import java.awt.event.*;
 
 public class UnoNetwork implements ActionListener{
 	//Properties
-	SuperSocketMaster ssm;
+	private SuperSocketMaster ssm;
 	private ActionListener gameListener = null;
 	private String strLastMessage = "";
 
@@ -80,7 +80,7 @@ public class UnoNetwork implements ActionListener{
 	//normal card played message
 	public void sendPlayerCard(String strPlayerName, String strCardName){
 		if(ssm != null){
-			ssm.sendText("[GAME MESSAGE] "+strPlayerName + " has played "+ strCardName);
+			ssm.sendText("[GAME MESSAGE] "+strPlayerName + " played "+ strCardName);
 		}
 	}
 	
@@ -93,7 +93,7 @@ public class UnoNetwork implements ActionListener{
 	//colour change card message
 	public void sendColourChange(String strPlayerName, String strColour){
 		if(ssm != null){
-			ssm.sendText("[GAME MESSAGE] "+strPlayerName + " has changed the colour to: "+ strColour);
+			ssm.sendText("[GAME MESSAGE] "+strPlayerName + " changed colour to: "+ strColour);
 		}
 	}
 	
@@ -103,17 +103,16 @@ public class UnoNetwork implements ActionListener{
 			ssm.sendText("GAMEOVER: " + strWinner + " has won!!!");
 		}
 	}
+	
+	public void send(String strMessage){
+		if(ssm != null){
+			ssm.sendText(strMessage);
+		}
+	}
 
 	//Constructor
 	public UnoNetwork(ActionListener gameListener){
 		this.gameListener = gameListener;
-	}
-
-	//Main Method
-	public static void main(String[] args){
- 
-    
-    
 	}
 
 }
