@@ -288,14 +288,20 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				// chatArea.append("[CHAT] "+ strName + ": " + strMsg + "\n");
 				if(controller != null){
 					controller.sendChat(strName, strMsg);
+				}
+				chatArea.append("[CHAT] " + strName + ": " + strMsg + "\n");
+				chatInput.setText("");
+					/*
 					if(network == null || !network.isConnected()){
 						chatArea.append("[CHAT] " + strName + ": " + strMsg + "\n");
 					}
+					
 				}else{
 					 chatArea.append("[CHAT] " + strName + ": " + strMsg + "\n");
 				}
 				chatInput.setText("");
 				// need to send via socket to other players
+				*/
 			}
 			this.requestFocusInWindow();
 		}
@@ -1593,20 +1599,54 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 					// flip same first card as host
 					model.flipFirstCard();
 					System.out.println("Client synced to seed: " + lngSeed);
+					
+					intDrawPileSize = model.intDrawPileSize;
+					for(int i = 0; i < intDrawPileSize; i++){
+						strDrawPile[i] = model.strDrawPile[i];
+					}
+					intDiscardPileSize = model.intDiscardPileSize;
+					for(int i = 0; i < intDiscardPileSize; i++){
+						strDiscardPile[i] = model.strDiscardPile[i];
+					}
+					intHandSize = model.intHandSizes[0];
+					for(int i = 0; i < intHandSize; i++){
+						strPlayHand[i] = model.strHands[0][i];
+					}
+					for(int i = 0; i < 3; i++){
+						intTurnOrder[i] = model.intTurnOrder[i];
+					}
+					intCurrentTurn = model.intCurrentTurn;
+					blnClockwise = model.blnClockwise;
+					intCardCount1 = model.intHandSizes[0];
+					intCardCount2 = model.intHandSizes[1];
+					intCardCount3 = model.intHandSizes[2];
+					intDeckSize = model.intDeckSize;
+					for(int i = 0; i < intDeckSize; i++){
+						strDeck[i] = model.strDeck[i];
+					}
+					
+					intCardPage = 0;
+					strWildColor = "";
+					blnEliminated = false;
+					blnWildPicker = false;
+					preloadCardImages();
+					fadeToScreen("flipfirst");
 				}
 				// sync view
-				startGame();
+				// startGame();
 			}catch(NumberFormatException ex){
 				System.out.println("Bad seed received: " + strSeedStr);
 			}
-			return;
+			// return;
 		}else if (strMessage.startsWith("[CHAT]")){
 			chatArea.append(strMessage + "\n");
-			if(!blnChat){
+			repaint();
+			/* if(!blnChat){
 				blnChat = true;
 				setComponentVisibility();
 				repaint();
 			}
+			*/
 		}else if(strMessage.startsWith("[GAME MESSAGE]")){
 			chatArea.append(strMessage + "\n");
 			blnChat = true;
