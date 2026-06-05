@@ -56,12 +56,6 @@ public class UnoNetwork implements ActionListener{
 		}
 	}
 	
-	public void sendSeed(long lngSeed){
-		if(ssm != null){
-			ssm.sendText("[SEED] " + lngSeed);
-		}
-	}
-	
 	//leaving game message
 	public void sendLeft(String strPlayerName){
 		if(ssm != null){

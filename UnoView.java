@@ -1564,28 +1564,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	}
 	
 	public void processNetworkMessage(String strMessage){
-		if(strMessage.startsWith("[SEED]")){
-			String strSeed = strMessage.substring(7).trim();
-			try{
-				long lngSeed = Long.parseLong(strSeed);
-				if(model != null){
-					// client re-shuffles using host's seed so decks match
-					model.intDrawPileSize = model.intDeckSize;
-					for(int i = 0; i < model.intDeckSize; i++){
-						model.strDrawPile[i] = model.strDeck[i];
-					}
-					model.shuffleDeckWithSeed(lngSeed);
-					model.intDiscardPileSize = 0;
-					model.dealStartingHands();
-					model.flipFirstCard();
-				}
-				// trigger view to sync from updated model
-				startGame();
-			}catch(NumberFormatException ex){
-				System.out.println("Bad seed: " + strSeed);
-			}
-			return;
-		}else if (strMessage.startsWith("[CHAT]")){
+		if(strMessage.startsWith("[CHAT]")){
 			chatArea.append(strMessage + "\n");
 			blnChat = true;
 			setComponentVisibility();
@@ -1788,7 +1767,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		 	// imgGameOver = ImageIO.read(new File(strPath + "general_bg.png"));
 			// imgEliminated = ImageIO.read(new File(strPath + "general_bg.png"));
 		}catch(IOException e){
-			System.out.println("Error: Could not load background image");
+			System.out.println("Error: Could not load image");
 			e.printStackTrace();
 		}
 		loadDeck();
