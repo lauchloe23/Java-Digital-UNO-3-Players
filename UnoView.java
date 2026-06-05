@@ -285,15 +285,11 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		}else if(e.getSource() == chatInput){
 			String strMsg = chatInput.getText().trim();
 			if(!strMsg.equals("")){
-				// chatArea.append("[CHAT] "+ strName + ": " + strMsg + "\n");
+				chatArea.append("[CHAT] "+ strName + ": " + strMsg + "\n");
+					
 				if(controller != null){
 					controller.sendChat(strName, strMsg);
-					if(network == null || !network.isConnected()){
-						chatArea.append("[CHAT] " + strName + ": " + strMsg + "\n");
-					}
-				}else{
-					 chatArea.append("[CHAT] " + strName + ": " + strMsg + "\n");
-				}
+				}	
 				chatInput.setText("");
 				// need to send via socket to other players
 			}
@@ -520,9 +516,6 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	
 	// Game paint element logic method (when name, theme enters -> it starts)
 	private void startGame(){
-		if(controller != null && !controller.isHost() && !blnNetworkReady){
-			return;
-		}
 		if(model != null){
 			// Pull all game state from the model
 			intDrawPileSize = model.intDrawPileSize;
@@ -1572,41 +1565,31 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	
 	public void processNetworkMessage(String strMessage){
 		if(strMessage.startsWith("[SEED]")){
-			String strSeedStr = strMessage.substring(7).trim();
+			String strSeed = strMessage.substring(7).trim();
 			try{
-				long lngSeed = Long.parseLong(strSeedStr);
+				long lngSeed = Long.parseLong(strSeed);
 				if(model != null){
-					// reset draw pile from deck (same as shuffleDeck does)
+					// client re-shuffles using host's seed so decks match
 					model.intDrawPileSize = model.intDeckSize;
-					model.intDiscardPileSize = 0;
 					for(int i = 0; i < model.intDeckSize; i++){
 						model.strDrawPile[i] = model.strDeck[i];
 					}
-					// reset all hands
-					for(int p = 0; p < 3; p++){
-						model.intHandSizes[p] = 0;
-					}
-					// shuffle with exact same seed as host
 					model.shuffleDeckWithSeed(lngSeed);
-					// deal same cards as host
+					model.intDiscardPileSize = 0;
 					model.dealStartingHands();
-					// flip same first card as host
 					model.flipFirstCard();
-					System.out.println("Client synced to seed: " + lngSeed);
 				}
-				// sync view
+				// trigger view to sync from updated model
 				startGame();
 			}catch(NumberFormatException ex){
-				System.out.println("Bad seed received: " + strSeedStr);
+				System.out.println("Bad seed: " + strSeed);
 			}
 			return;
 		}else if (strMessage.startsWith("[CHAT]")){
 			chatArea.append(strMessage + "\n");
-			if(!blnChat){
-				blnChat = true;
-				setComponentVisibility();
-				repaint();
-			}
+			blnChat = true;
+			setComponentVisibility();
+			repaint();
 		}else if(strMessage.startsWith("[GAME MESSAGE]")){
 			chatArea.append(strMessage + "\n");
 			blnChat = true;
