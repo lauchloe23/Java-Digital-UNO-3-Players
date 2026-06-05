@@ -1050,7 +1050,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	private void drawTheme(Graphics2D g2){
 		// overlay
 		g2.setColor(transparentDark);
-		g2.fillRoundRect(300, 80, 680, 560, 20, 20);
+		g2.fillRoundRect(300, 100, 680, 560, 20, 20);
 		
 		// title
 		g2.setColor(Color.WHITE);
@@ -1261,7 +1261,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	private void drawFlipFirst(Graphics2D g2){
 		drawBackground(g2);
 		g2.setColor(transparentBlack);
-		g2.fillRoundRect(200, 80, 880, 560, 20, 20);
+		g2.fillRoundRect(200, 100, 880, 560, 20, 20);
 		g2.setFont(titleFont);
 		g2.setColor(Color.WHITE);
 		drawCenteredString(g2, "STARTING CARD", 640, 140);
@@ -1775,9 +1775,9 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	}
 	
 	// Main Method
-	
+	/*
 	public static void main(String[] args){
 		new UnoView();
 	}
-	
+	*/
 }
