@@ -48,6 +48,10 @@ public class UnoNetwork implements ActionListener{
 		}
 	}
 	
+	public boolean isConnected(){
+		return ssm != null;
+	}
+	
 	//Game Messages:
 	//joining game message
 	public void sendJoin(String strPlayerName){

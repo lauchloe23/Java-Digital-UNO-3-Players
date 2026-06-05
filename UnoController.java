@@ -39,6 +39,10 @@ public class UnoController implements ActionListener{
 		return true; 
 	}
 	
+	public boolean isHost(){
+		return blnIsHost;
+	}
+
 	public boolean joinGame(String strIP){
 		blnIsHost = false;
 		Thread t = new Thread(){
@@ -59,15 +63,21 @@ public class UnoController implements ActionListener{
 	
 	public void startGame(String strPlayerName){
 		model.strPlayerNames[0] = strPlayerName;
-		model.startGame();
-		
-		if(network != null){
-			network.sendJoin(strPlayerName);
-			if(blnIsHost){
+		if(blnIsHost){
+			// host is authoritative
+			model.startGame();
+			if(network != null){
+				network.sendJoin(strPlayerName);
 				network.sendSeed(model.lngSeed);
+			}
+		}else{
+			// client: only set name
+			if(network != null){
+				network.sendJoin(strPlayerName);
 			}
 		}
 	}
+	
 	
 	//Controller
 	public UnoController(){
