@@ -91,6 +91,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	boolean blnFlipFirst = false; // show first card
 	boolean blnEliminated = false; // local player eliminated
 	boolean blnWildPicker = false;
+	boolean blnNetworkReady = false;
 	
 	// elimination tracking
 	boolean[] blnPlayerEliminated = {false, false, false};
@@ -172,12 +173,16 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			String strTyped = nameField.getText().trim();
 			// name cannot be empty
 			if(!strTyped.equals("")){
-				strName = strTyped;
-				strPlayNames[0] = strName;
-				if(controller != null){
-					controller.startGame(strName);
+				if(!blnNetworkReady){
+					repaint();
+				}else{
+					strName = strTyped;
+					strPlayNames[0] = strName;
+					if(controller != null){
+						controller.startGame(strName);
+					}
+					startGame();
 				}
-				startGame();
 			}
 		}else if(e.getSource() == btnHelp){
 			blnHelp = !blnHelp;
@@ -189,6 +194,11 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			blnHelp = false;
 			blnLeaderBoard = false;
 			setComponentVisibility();
+			if(blnChat){
+				chatInput.requestFocus();
+			}else{
+				this.requestFocusInWindow();
+			}
 		}else if(e.getSource() == btnLeaderBoard){
 			blnLeaderBoard = !blnLeaderBoard;
 			blnHelp = false;
@@ -235,7 +245,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			}
 		}else if(e.getSource() == nameField){
 			String strTyped = nameField.getText().trim();
-			if(!strTyped.equals("")){
+			if(!strTyped.equals("") && blnNetworkReady){
 				strName = strTyped;
 				strPlayNames[0] = strName;
 				if(controller != null){
@@ -247,10 +257,14 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			if(controller != null){
 				boolean blnWorked = controller.hostGame();
 				if(blnWorked){
+					blnNetworkReady = true;
 					chatArea.append("[GAME MESSAGE] Hosting game on port 5555\n");
 				}else{
 					chatArea.append("[GAME MESSAGE] Could not host game\n");
+					blnNetworkReady = true;
 				}
+			}else{
+				blnNetworkReady = true;
 			}
 
 		}else if(e.getSource() == btnJoin){
@@ -259,11 +273,14 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			if(controller != null && !strIP.equals("")){
 				boolean blnWorked = controller.joinGame(strIP);
 				if(blnWorked){
+					blnNetworkReady = true;
 					chatArea.append("[GAME MESSAGE] Connected to host: " + strIP + "\n");
 				}else{
 					chatArea.append("[GAME MESSAGE] Could not connect to host\n");
+					blnNetworkReady = true;
 				}
-				
+			}else{
+				blnNetworkReady = true;
 			}
 		}else if(e.getSource() == chatInput){
 			String strMsg = chatInput.getText().trim();
@@ -276,10 +293,15 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				chatInput.setText("");
 				// need to send via socket to other players
 			}
+			this.requestFocusInWindow();
 		}
-		repaint();
+		// repaint();
+		
+		if(e.getSource() != chatInput){
+			repaint();
+		}
 	}
-	
+
 	// Mouse Listener Method Overrides
 	public void mouseClicked(MouseEvent e){
 		if(blnEnterScreen){
@@ -292,7 +314,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			}else{
 				fadeToScreen("wait");
 			}
-		}else if(blnTurnScreen && !blnHelp && !blnLeaderBoard && !blnWildPicker){
+		}else if(blnTurnScreen && !blnHelp && !blnLeaderBoard && !blnWildPicker && !blnChat){
 			handleCardClick(e.getX(), e.getY());
 		}
 	}
@@ -307,8 +329,22 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		if(blnEnterScreen){
 			fadeToScreen("play");
 			// showPlayScreen();
+		}else if(e.getKeyCode() == KeyEvent.VK_ENTER){
+			// pressing Enter during gameplay
+			boolean blnGameplayScreen = blnTurnScreen || blnWaitScreen || blnDisplayCard || blnPickCard;
+			if(blnGameplayScreen && !chatInput.isFocusOwner()){
+				blnChat = !blnChat;
+				setComponentVisibility();
+				if(blnChat){
+					chatInput.requestFocusInWindow();
+				}else{
+					this.requestFocusInWindow();
+				}
+				repaint();
+			}
 		}
 	}
+	
 	public void keyTyped(KeyEvent e){}
 	public void keyReleased(KeyEvent e){}
 	
@@ -533,6 +569,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		strWildColor = "";
 		blnEliminated = false;
 		blnWildPicker = false;
+		// blnNetworkReady = false;
 		preloadCardImages(); // reload images with updated deck + theme
 		fadeToScreen("flipfirst");
 	}
@@ -1032,7 +1069,11 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		if(nameField.getText().trim().equals("")){
 			g2.setColor(unoRed);
 			g2.setFont(bodyFont);
-			drawCenteredString(g2, "Name required to start", 640, 630);
+			drawCenteredString(g2, "Name required to start", 640, 430);
+		}else if(!blnNetworkReady){
+			g2.setColor(unoRed);
+			g2.setFont(bodyFont);
+			drawCenteredString(g2, "You must HOST or JOIN a game before starting", 640, 430);
 		}
 		
 		// theme options
@@ -1400,9 +1441,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	
 	// Display of JButton
 	private void setComponentVisibility(){
-		
 		boolean blnGameplayScreen = blnTurnScreen || blnWaitScreen || blnDisplayCard || blnPickCard;
-		// Play screen
 		playButton.setVisible(blnPlayScreen);
 		
 		// Theme Screen
@@ -1436,8 +1475,8 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		btnEliminatedOK.setVisible(blnEliminated);
 		
 		// chat area screen overlay
-		chatInput.setVisible(blnChat && blnTurnScreen);
-		chatArea.setVisible(blnChat && blnTurnScreen);
+		chatInput.setVisible(blnChat && blnGameplayScreen);
+		chatArea.setVisible(blnChat && blnGameplayScreen);
 	}
 	
 	// Reset Screens
@@ -1722,11 +1761,11 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			imgStart = ImageIO.read(new File(strPath + "start_bg.png"));
 			imgBackground = ImageIO.read(new File(strPath + "general_bg.png"));
 			imgWait = ImageIO.read(new File(strPath + "wait_bg.png"));
-			imgPickCard = ImageIO.read(new File(strPath + "pick_card_bg.png"));
-			imgDisplay = ImageIO.read(new File(strPath + "display_bg.png"));
-			imgYourTurn = ImageIO.read(new File(strPath + "your_turn_bg.png"));
-			imgGameOver = ImageIO.read(new File(strPath + "game_over_bg.png"));
-			imgEliminated = ImageIO.read(new File(strPath + "eliminated_bg.png"));
+			// imgPickCard = ImageIO.read(new File(strPath + "pick_card_bg.png"));
+			// imgDisplay = ImageIO.read(new File(strPath + "display_bg.png"));
+			// imgYourTurn = ImageIO.read(new File(strPath + "your_turn_bg.png"));
+		 	// imgGameOver = ImageIO.read(new File(strPath + "general_bg.png"));
+			// imgEliminated = ImageIO.read(new File(strPath + "general_bg.png"));
 		}catch(IOException e){
 			System.out.println("Error: Could not load image");
 			e.printStackTrace();
