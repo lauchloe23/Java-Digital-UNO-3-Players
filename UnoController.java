@@ -29,14 +29,26 @@ public class UnoController implements ActionListener{
 	
 	public boolean hostGame(){
 		blnIsHost = true;
-		blnConnected = network.startServer(intDefaultPort);
-		return blnConnected;
+		Thread t = new Thread(){
+			public void run(){
+				blnConnected = network.startServer(intDefaultPort);
+				System.out.println("Host result: " + blnConnected);
+			}
+		};
+		t.start();
+		return true; 
 	}
 	
 	public boolean joinGame(String strIP){
 		blnIsHost = false;
-		blnConnected = network.connectServer(strIP, intDefaultPort);
-		return blnConnected;
+		Thread t = new Thread(){
+			public void run(){
+				blnConnected = network.connectServer(strIP, intDefaultPort);
+				System.out.println("Join result: " + blnConnected);
+			}
+		};
+		t.start();
+		return true;
 	}
 	
 	public void sendChat(String strPlayerName, String strMessage){
@@ -51,6 +63,9 @@ public class UnoController implements ActionListener{
 		
 		if(network != null){
 			network.sendJoin(strPlayerName);
+			if(blnIsHost){
+				network.sendSeed(model.lngSeed);
+			}
 		}
 	}
 	

@@ -32,6 +32,7 @@ public class UnoModel{
 	
 	// wild card chosen color
 	String strWildColor = "";
+	long lngSeed = 0;
 	
 	// game setup variables
 	boolean blnGameOver = false;
@@ -125,14 +126,15 @@ public class UnoModel{
 			strDrawPile[intCount] = strDeck[intCount];
 			intDrawPileSize++;
 		}
-		
-		Random rand = new Random();
-		
-		for(int intCount = intDrawPileSize -1; intCount > 0; intCount--){
-			
-			//generating random card position
+		lngSeed = System.currentTimeMillis();
+		shuffleDeckWithSeed(lngSeed);
+	}
+	
+	public void shuffleDeckWithSeed(long lngGivenSeed){
+		lngSeed = lngGivenSeed;
+		Random rand = new Random(lngGivenSeed);
+		for(int intCount = intDrawPileSize - 1; intCount > 0; intCount--){
 			int intNum = rand.nextInt(intCount + 1);
-			
 			String[] strTemp = strDrawPile[intCount];
 			strDrawPile[intCount] = strDrawPile[intNum];
 			strDrawPile[intNum] = strTemp;
@@ -157,7 +159,7 @@ public class UnoModel{
 	}
 	
 	//dealing each player starting hands
-	private void dealStartingHands(){
+	public void dealStartingHands(){
 		//reseting all hands to zero
 		for(int intCount = 0; intCount < intPlayers; intCount++){
 			intHandSizes[intCount] = 0;
@@ -172,7 +174,7 @@ public class UnoModel{
 	}
 	
 	// flip first card by taking the top card of draw pil and place on discard pile
-	private void flipFirstCard(){
+	public void flipFirstCard(){
 		if(intDrawPileSize > 0){
 			strDiscardPile[0] = strDrawPile[0];
 			intDiscardPileSize = 1;
