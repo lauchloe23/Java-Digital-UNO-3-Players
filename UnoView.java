@@ -272,7 +272,16 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 						public void run(){
 							if(blnWorked){
 								blnNetworkReady = true;
-								chatArea.append("[GAME MESSAGE] Player connected! Hosting on port 5555\n");
+								String strHostIP = "unknown";
+								// chatArea.append("[GAME MESSAGE] Player connected! Hosting on port 5555\n");
+								try{
+									strHostIP = java.net.InetAddress.getLocalHost().getHostAddress();
+								}catch(Exception ex){
+									strHostIP = "unknown";
+								}
+								chatArea.append("[GAME MESSAGE] Player connected! Your IP is: " + strHostIP + "\n");
+								chatArea.append("[GAME MESSAGE] Tell your partner to enter that IP and click JOIN\n");
+								ipField.setText(strHostIP);
 							}else{
 								chatArea.append("[GAME MESSAGE] Could not host game\n");
 								btnHost.setEnabled(true);
