@@ -144,6 +144,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	JTextField ipField = new JTextField("127.0.0.1");
 	JTextField chatInput = new JTextField();
 	JTextArea chatArea = new JTextArea();
+	JScrollPane chatScroll = new JScrollPane(chatArea);
 	
 	// JComponent (game play)
 	JButton btnPrev = createGoldButton("<PREV");
@@ -285,13 +286,21 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		}else if(e.getSource() == chatInput){
 			String strMsg = chatInput.getText().trim();
 			if(!strMsg.equals("")){
-				chatArea.append("[CHAT] "+ strName + ": " + strMsg + "\n");
-					
+				// Show the message in YOUR OWN chatArea immediately (you won't receive your own socket message back)
+				String strFormatted = "[CHAT] " + strName + ": " + strMsg;
+				chatArea.append(strFormatted + "\n");
+				chatArea.setCaretPosition(chatArea.getDocument().getLength()); // auto-scroll to bottom
+				
+				// Make sure chat panel is visible
+				blnChat = true;
+				setComponentVisibility();
+				
+				// Send to all other players via network
 				if(controller != null){
 					controller.sendChat(strName, strMsg);
-				}	
+				}
 				chatInput.setText("");
-				// need to send via socket to other players
+				repaint();
 			}
 			this.requestFocusInWindow();
 		}
@@ -1476,7 +1485,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		
 		// chat area screen overlay
 		chatInput.setVisible(blnChat && blnGameplayScreen);
-		chatArea.setVisible(blnChat && blnGameplayScreen);
+		chatScroll.setVisible(blnChat && blnGameplayScreen);
 	}
 	
 	// Reset Screens
@@ -1566,6 +1575,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	public void processNetworkMessage(String strMessage){
 		if(strMessage.startsWith("[CHAT]")){
 			chatArea.append(strMessage + "\n");
+			chatArea.setCaretPosition(chatArea.getDocument().getLength()); 
 			blnChat = true;
 			setComponentVisibility();
 			repaint();
@@ -1576,6 +1586,48 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			repaint();
 		}else if(strMessage.startsWith("GAMEOVER")){
 			showGameOver(strMessage);
+		}else if(strMessage.startsWith("SETUP|")){
+			// Parse the host's dealt hands
+			String[] strParts = strMessage.split("\\|");			
+			if(strParts.length >= 6){
+				// Load each player's hand into the model
+				for(int p = 0; p < 3; p++){
+					model.intHandSizes[p] = 0;
+					if(!strParts[p + 1].equals("")){
+						String[] strCards = strParts[p + 1].split(",");
+						for(int c = 0; c < strCards.length; c++){
+							// Find this card in the model's deck by name
+							for(int d = 0; d < model.intDeckSize; d++){
+								if(model.strDeck[d][0].equals(strCards[c])){
+									model.strHands[p][model.intHandSizes[p]] = model.strDeck[d];
+									model.intHandSizes[p]++;
+									break;
+								}
+							}
+						}
+					}
+				}
+				
+				// Load turn order
+				String[] strOrder = strParts[4].split(",");
+				for(int i = 0; i < 3 && i < strOrder.length; i++){
+					model.intTurnOrder[i] = Integer.parseInt(strOrder[i]);
+				}
+				model.intCurrentTurn = 0;
+				
+				// Set top discard
+				String strTopName = strParts[5];
+				for(int d = 0; d < model.intDeckSize; d++){
+					if(model.strDeck[d][0].equals(strTopName)){
+						model.strDiscardPile[0] = model.strDeck[d];
+						model.intDiscardPileSize = 1;
+						break;
+					}
+				}
+				
+				// sync view from model
+				startGame();
+			}
 		}
 	}
 
@@ -1724,15 +1776,19 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		this.add(btnEliminatedOK);
 		
 		// chat components
-		chatArea.setBounds(15, 50, 290, 250);
 		chatArea.setFont(bodyFont);
 		chatArea.setForeground(Color.WHITE);
 		chatArea.setOpaque(false);
 		chatArea.setEditable(false);
 		chatArea.setLineWrap(true);
 		chatArea.setWrapStyleWord(true);
-		chatArea.setVisible(false);
-		this.add(chatArea);
+
+		chatScroll.setBounds(15, 50, 290, 250);
+		chatScroll.setOpaque(false);
+		chatScroll.getViewport().setOpaque(false);
+		chatScroll.setBorder(BorderFactory.createEmptyBorder());
+		chatScroll.setVisible(false);
+		this.add(chatScroll);
 		
 		chatInput.setBounds(15, 312, 290, 35);
 		chatInput.setFont(bodyFont);

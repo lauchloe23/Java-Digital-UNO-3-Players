@@ -104,6 +104,32 @@ public class UnoNetwork implements ActionListener{
 		}
 	}
 	
+	// send game setup (dealt hands + turn order) 
+	public void sendGameSetup(String[][][] strHands, int[] intHandSizes, int[] intTurnOrder, String[] strDiscardTop){
+		if(ssm != null){
+			// Each card is encoded as cardName
+			String strMsg = "SETUP|";
+			
+			for(int p = 0; p < 3; p++){
+				for(int c = 0; c < intHandSizes[p]; c++){
+					strMsg += strHands[p][c][0];
+					if(c < intHandSizes[p] - 1) strMsg += ",";
+				}
+				strMsg += "|";
+			}
+			
+			for(int i = 0; i < 3; i++){
+				strMsg += intTurnOrder[i];
+				if(i < 2) strMsg += ",";
+			}
+			strMsg += "|";
+			// card name of top of dicard
+			strMsg += strDiscardTop[0];
+			
+			ssm.sendText(strMsg);
+		}
+	}
+	
 	public void send(String strMessage){
 		if(ssm != null){
 			ssm.sendText(strMessage);

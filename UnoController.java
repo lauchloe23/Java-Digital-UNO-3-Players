@@ -51,6 +51,13 @@ public class UnoController implements ActionListener{
 		
 		if(network != null){
 			network.sendJoin(strPlayerName);
+			if(blnIsHost){
+				String[] strDiscardTop = model.getTopDiscard();
+				if(strDiscardTop == null){
+					strDiscardTop = new String[]{"", "", "", ""};
+				}
+				network.sendGameSetup(model.strHands, model.intHandSizes, model.intTurnOrder, strDiscardTop);
+			}
 		}
 	}
 	
