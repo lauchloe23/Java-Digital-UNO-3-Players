@@ -304,7 +304,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 					SwingUtilities.invokeLater(new Runnable(){
 						public void run(){
 							if(blnWorked){
-								blnNetworkReady = true;
+								// blnNetworkReady = true;
 								String strHostIP = "unknown";
 								try{
 									strHostIP = java.net.InetAddress.getLocalHost().getHostAddress();
@@ -318,6 +318,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 								// setComponentVisibility();
 							}else{
 								chatArea.append("[GAME MESSAGE] Could not host game. Port may already be in use.\n");
+								blnNetworkReady = false;
 								btnHost.setEnabled(true);
 								btnJoin.setEnabled(true);
 							}

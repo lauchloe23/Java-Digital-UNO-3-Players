@@ -39,8 +39,10 @@ public class UnoController implements ActionListener{
 		System.out.println("Network Message: " + strMessage);
 		
 		if(strMessage.startsWith("READY|")){
-			if(blnIsHost && blnGameStarted){
-				sendCurrentSetup();
+			if(blnIsHost){
+				if(blnGameStarted){
+					sendCurrentSetup();
+				}
 			}
 		}
 		
