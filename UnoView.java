@@ -357,13 +357,28 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 
 			if(controller != null && !strIP.equals("")){
 				boolean blnWorked = controller.joinGame(strIP);
-				if(blnWorked){
-					blnNetworkReady = true;
-					chatArea.append("[GAME MESSAGE] Connected to host: " + strIP + "\n");
-				}else{
-					chatArea.append("[GAME MESSAGE] Could not connect to host\n");
-					blnNetworkReady = true;
-				}
+				chatArea.append("[GAME MESSAGE] Connecting to host: " + strIP + "...\n");
+				btnHost.setEnabled(false);
+				btnJoin.setEnabled(false);
+				Thread joinThread = new Thread(new Runnable(){
+					public void run(){
+						boolean blnWorked = (controller != null && !strIP.equals("")) && controller.joinGame(strIP);
+						SwingUtilities.invokeLater(new Runnable(){
+							public void run(){
+								if(blnWorked){
+									blnNetworkReady = true;
+									chatArea.append("[GAME MESSAGE] Connected to host: " + strIP + "\n");
+								}else{
+									chatArea.append("[GAME MESSAGE] Could not connect to host\n");
+									btnHost.setEnabled(true);
+									btnJoin.setEnabled(true);
+								}
+								repaint();
+							}
+						});
+					}
+				});
+				joinThread.start();
 			}else{
 				blnNetworkReady = true;
 			}

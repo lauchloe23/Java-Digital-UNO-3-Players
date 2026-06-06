@@ -8,7 +8,7 @@ public class UnoController implements ActionListener{
 	private UnoNetwork network;
 	
 	// network varaible
-	private static final int intDefaultPort = 5555;
+	private static final int intDefaultPort = 8080;
 	private boolean blnIsHost = false;
 	private boolean blnConnected = false;
 	private boolean blnGameStarted = false;
