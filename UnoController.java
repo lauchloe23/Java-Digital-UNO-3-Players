@@ -1,4 +1,5 @@
 import java.awt.event.*;
+import javax.swing.SwingUtilities;
 
 public class UnoController implements ActionListener{
 	//Properties
@@ -23,7 +24,11 @@ public class UnoController implements ActionListener{
 		System.out.println("Network Message: " + strMessage);
 		
 		if(view != null){
-			view.processNetworkMessage(strMessage);
+			SwingUtilities.invokeLater(new Runnable(){
+				public void run(){
+					view.processNetworkMessage(strMessage);
+				}
+			});
 		}
 	}
 	
