@@ -205,8 +205,8 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 							startGame();
 						}else{
 							chatArea.append("[GAME MESSAGE] Waiting for host setup...\n");
-							blnChat = true;
-							setComponentVisibility();
+							// blnChat = true;
+							// setComponentVisibility();
 						}
 					}
 				}
@@ -295,7 +295,6 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				}
 			}
 		}else if(e.getSource() == btnHost){
-			/*
 			chatArea.append("[GAME MESSAGE] Waiting for player to join...\n");
 			btnHost.setEnabled(false);
 			btnJoin.setEnabled(false);
@@ -307,17 +306,18 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 							if(blnWorked){
 								blnNetworkReady = true;
 								String strHostIP = "unknown";
-								// chatArea.append("[GAME MESSAGE] Player connected! Hosting on port 5555\n");
 								try{
 									strHostIP = java.net.InetAddress.getLocalHost().getHostAddress();
 								}catch(Exception ex){
 									strHostIP = "unknown";
 								}
 								chatArea.append("[GAME MESSAGE] Player connected! Your IP is: " + strHostIP + "\n");
-								chatArea.append("[GAME MESSAGE] Tell your partner to enter that IP and click JOIN\n");
+								chatArea.append("[GAME MESSAGE] Tell your partner to enter that IP and click JOIN GAME (port 8080)\n");
 								ipField.setText(strHostIP);
+								// blnChat = true;
+								// setComponentVisibility();
 							}else{
-								chatArea.append("[GAME MESSAGE] Could not host game\n");
+								chatArea.append("[GAME MESSAGE] Could not host game. Port may already be in use.\n");
 								btnHost.setEnabled(true);
 								btnJoin.setEnabled(true);
 							}
@@ -327,36 +327,10 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				}
 			});
 			hostThread.start();
-			*/
-			
-			if(controller != null){
-				boolean blnWorked = controller.hostGame();
-				
-				if(blnWorked){
-					blnNetworkReady = true;
-					
-					String strHostIP = getLocalIPAddress();
-					
-					chatArea.append("[GAME MESSAGE] Hosting game on port 5555\n");
-					chatArea.append("[GAME MESSAGE] Give this IP to joiners: " + strHostIP + "\n");
-					chatArea.append("[GAME MESSAGE] Joiners should type this IP and click JOIN GAME.\n");
-					
-					ipField.setText(strHostIP);
-					blnChat = true;
-					setComponentVisibility();
-				}else{
-					chatArea.append("[GAME MESSAGE] Could not host game. Port may already be used.\n");
-					blnNetworkReady = false;
-				}
-			}else{
-				blnNetworkReady = false;
-			}
 		}else if(e.getSource() == btnJoin){
-			/*
 			String strIP = ipField.getText().trim();
-
-			if(!strIP.equals("")){
-				chatArea.append("[GAME MESSAGE] Connecting to host: " + strIP + "...\n");
+			if(!strIP.equals("") && !strIP.equals("Enter host IP")){
+				chatArea.append("[GAME MESSAGE] Connecting to " + strIP + "...\n");
 				btnHost.setEnabled(false);
 				btnJoin.setEnabled(false);
 				Thread joinThread = new Thread(new Runnable(){
@@ -367,8 +341,11 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 								if(blnWorked){
 									blnNetworkReady = true;
 									chatArea.append("[GAME MESSAGE] Connected to host: " + strIP + "\n");
+									chatArea.append("[GAME MESSAGE] Enter your name and press START GAME\n");
+									blnChat = true;
+									setComponentVisibility();
 								}else{
-									chatArea.append("[GAME MESSAGE] Could not connect to host\n");
+									chatArea.append("[GAME MESSAGE] Could not connect. Check the IP and try again.\n");
 									btnHost.setEnabled(true);
 									btnJoin.setEnabled(true);
 								}
@@ -379,11 +356,10 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				});
 				joinThread.start();
 			}else{
-				blnNetworkReady = true;
+				chatArea.append("[GAME MESSAGE] Enter the host IP first.\n");
 			}
 			
-			*/
-			
+			/*
 			String strIP = ipField.getText().trim();
 
 			if(controller != null && !strIP.equals("") && !strIP.equals("Enter host IP")){
@@ -400,6 +376,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				chatArea.append("[GAME MESSAGE] Enter the host IP first.\n");
 				blnNetworkReady = false;
 			}
+			*/
 		}else if(e.getSource() == chatInput){
 			String strMsg = chatInput.getText().trim();
 			if(!strMsg.equals("")){
@@ -1695,13 +1672,19 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				if(strMessage.startsWith("[CHAT]")){
 					chatArea.append(strMessage + "\n");
 					chatArea.setCaretPosition(chatArea.getDocument().getLength()); 
-					blnChat = true;
+					boolean blnGameplayScreen = blnTurnScreen || blnWaitScreen || blnDisplayCard || blnPickCard;
+					if(blnGameplayScreen){
+						blnChat = true;
+					}
 					setComponentVisibility();
 					repaint();
 				}else if(strMessage.startsWith("[GAME MESSAGE]")){
 					chatArea.append(strMessage + "\n");
-					chatArea.setCaretPosition(chatArea.getDocument().getLength()); // Fix 4: added auto-scroll
-					blnChat = true;
+					chatArea.setCaretPosition(chatArea.getDocument().getLength());
+					boolean blnGameplayScreen = blnTurnScreen || blnWaitScreen || blnDisplayCard || blnPickCard;
+					if(blnGameplayScreen){
+						blnChat = true;
+					}
 					setComponentVisibility();
 					repaint();
 				}else if(strMessage.startsWith("GAMEOVER")){
