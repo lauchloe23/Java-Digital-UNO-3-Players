@@ -205,6 +205,11 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 							startGame();
 						}else{
 							chatArea.append("[GAME MESSAGE] Waiting for host setup...\n");
+							blnChat = false;
+							setComponentVisibility();
+							repaint();
+													
+							
 							// blnChat = true;
 							// setComponentVisibility();
 						}
@@ -289,12 +294,62 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 						startGame();
 					}else{
 						chatArea.append("[GAME MESSAGE] Waiting for host setup...\n");
-						blnChat = true;
+						blnChat = false;
 						setComponentVisibility();
+						repaint();
 					}
 				}
 			}
 		}else if(e.getSource() == btnHost){
+			chatArea.append("[GAME MESSAGE] Hosting game on port 8080...\n");
+
+			btnHost.setEnabled(false);
+			btnJoin.setEnabled(false);
+			btnEnterGame.setEnabled(false);
+
+			Thread hostThread = new Thread(new Runnable(){
+				public void run(){
+					boolean blnWorked = (controller != null) && controller.hostGame();
+
+					SwingUtilities.invokeLater(new Runnable(){
+						public void run(){
+							if(blnWorked){
+								blnNetworkReady = true;
+
+								btnEnterGame.setEnabled(true);
+								nameField.setEnabled(true);
+
+								String strHostIP = getLocalIPAddress();
+
+								chatArea.append("[GAME MESSAGE] Hosting ready. Your IP is: " + strHostIP + "\n");
+								chatArea.append("[GAME MESSAGE] Give this IP to joiners. Port: 8080\n");
+								chatArea.append("[GAME MESSAGE] Enter your name and press START GAME.\n");
+
+								ipField.setText(strHostIP);
+
+								blnChat = false;
+								setComponentVisibility();
+								nameField.requestFocusInWindow();
+							}else{
+								blnNetworkReady = false;
+
+								chatArea.append("[GAME MESSAGE] Could not host game. Port may already be in use.\n");
+
+								btnHost.setEnabled(true);
+								btnJoin.setEnabled(true);
+								btnEnterGame.setEnabled(true);
+							}
+
+							repaint();
+						}
+					});
+				}
+			});
+
+			hostThread.start();
+			
+			
+			/*
 			chatArea.append("[GAME MESSAGE] Waiting for player to join...\n");
 			btnHost.setEnabled(false);
 			btnJoin.setEnabled(false);
@@ -327,7 +382,62 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				}
 			});
 			hostThread.start();
+			
+			*/
+			
+			
+			
 		}else if(e.getSource() == btnJoin){
+			String strIP = ipField.getText().trim();
+
+			if(!strIP.equals("") && !strIP.equals("Enter host IP")){
+				chatArea.append("[GAME MESSAGE] Connecting to " + strIP + "...\n");
+
+				btnHost.setEnabled(false);
+				btnJoin.setEnabled(false);
+				btnEnterGame.setEnabled(false);
+
+				Thread joinThread = new Thread(new Runnable(){
+					public void run(){
+						boolean blnWorked = (controller != null) && controller.joinGame(strIP);
+
+						SwingUtilities.invokeLater(new Runnable(){
+							public void run(){
+								if(blnWorked){
+									blnNetworkReady = true;
+
+									btnEnterGame.setEnabled(true);
+									nameField.setEnabled(true);
+
+									chatArea.append("[GAME MESSAGE] Connected to host: " + strIP + "\n");
+									chatArea.append("[GAME MESSAGE] Enter your name and press START GAME.\n");
+
+									blnChat = false;
+									setComponentVisibility();
+									nameField.requestFocusInWindow();
+								}else{
+									blnNetworkReady = false;
+
+									chatArea.append("[GAME MESSAGE] Could not connect. Check the IP and try again.\n");
+
+									btnHost.setEnabled(true);
+									btnJoin.setEnabled(true);
+									btnEnterGame.setEnabled(true);
+								}
+
+								repaint();
+							}
+						});
+					}
+				});
+
+				joinThread.start();
+			}else{
+				chatArea.append("[GAME MESSAGE] Enter the host IP first.\n");
+				blnNetworkReady = false;
+			}
+			
+			/*
 			String strIP = ipField.getText().trim();
 			if(!strIP.equals("") && !strIP.equals("Enter host IP")){
 				chatArea.append("[GAME MESSAGE] Connecting to " + strIP + "...\n");
@@ -358,7 +468,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			}else{
 				chatArea.append("[GAME MESSAGE] Enter the host IP first.\n");
 			}
-			
+			*/
 			/*
 			String strIP = ipField.getText().trim();
 
