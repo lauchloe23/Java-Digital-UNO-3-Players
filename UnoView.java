@@ -179,10 +179,17 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				}else{
 					strName = strTyped;
 					strPlayNames[0] = strName;
-					if(controller != null){
+					if(controller != null && controller.isHost()){
+						// Only the host shuffles, deals, and broadcasts SETUP
 						controller.startGame(strName);
+						startGame();
+					}else{
+						// Joining player: just send the join message and wait for SETUP
+						if(network != null){
+							network.sendJoin(strName);
+						}
+						chatArea.append("[GAME MESSAGE] Waiting for host to start game...\n");
 					}
-					startGame();
 				}
 			}
 		}else if(e.getSource() == btnHelp){
@@ -255,19 +262,28 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				startGame();
 			}
 		}else if(e.getSource() == btnHost){
-			if(controller != null){
-				boolean blnWorked = controller.hostGame();
-				if(blnWorked){
-					blnNetworkReady = true;
-					chatArea.append("[GAME MESSAGE] Hosting game on port 5555\n");
-				}else{
-					chatArea.append("[GAME MESSAGE] Could not host game\n");
-					blnNetworkReady = true;
+			chatArea.append("[GAME MESSAGE] Waiting for player to join...\n");
+			btnHost.setEnabled(false);
+			btnJoin.setEnabled(false);
+			Thread hostThread = new Thread(new Runnable(){
+				public void run(){
+					boolean blnWorked = (controller != null) && controller.hostGame();
+					SwingUtilities.invokeLater(new Runnable(){
+						public void run(){
+							if(blnWorked){
+								blnNetworkReady = true;
+								chatArea.append("[GAME MESSAGE] Player connected! Hosting on port 5555\n");
+							}else{
+								chatArea.append("[GAME MESSAGE] Could not host game\n");
+								btnHost.setEnabled(true);
+								btnJoin.setEnabled(true);
+							}
+							repaint();
+						}
+					});
 				}
-			}else{
-				blnNetworkReady = true;
-			}
-
+			});
+			hostThread.start();
 		}else if(e.getSource() == btnJoin){
 			String strIP = ipField.getText().trim();
 

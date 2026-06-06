@@ -66,6 +66,10 @@ public class UnoController implements ActionListener{
 		}
 	}
 	
+	public boolean isHost(){
+		return blnIsHost;
+	}
+	
 	//Controller
 	public UnoController(){
 		model = new UnoModel();
