@@ -296,14 +296,13 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		}else if(e.getSource() == btnJoin){
 			String strIP = ipField.getText().trim();
 
-			if(controller != null && !strIP.equals("")){
-				boolean blnWorked = controller.joinGame(strIP);
+			if(!strIP.equals("")){
 				chatArea.append("[GAME MESSAGE] Connecting to host: " + strIP + "...\n");
 				btnHost.setEnabled(false);
 				btnJoin.setEnabled(false);
 				Thread joinThread = new Thread(new Runnable(){
 					public void run(){
-						boolean blnWorked = (controller != null && !strIP.equals("")) && controller.joinGame(strIP);
+						boolean blnWorked = (controller != null) && controller.joinGame(strIP);
 						SwingUtilities.invokeLater(new Runnable(){
 							public void run(){
 								if(blnWorked){
