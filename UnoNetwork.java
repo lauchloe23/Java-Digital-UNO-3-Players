@@ -28,6 +28,12 @@ public class UnoNetwork implements ActionListener{
 		return ssm.connect();
 	}
 	
+	public void sendTurnUpdate(String strCardPlayed, String strWildColor){
+		if(ssm != null){
+			ssm.sendText("TURN|" + strCardPlayed + "|" + strWildColor);
+		}
+	}
+	
 	//connecting users to server
 	public boolean connectServer(String strIPadress, int intPort){
 		ssm = new SuperSocketMaster(strIPadress, intPort,this);

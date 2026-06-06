@@ -243,21 +243,33 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			blnWildPicker = false;
 			setComponentVisibility();
 			advanceTurn();
+			if(network != null){
+				network.sendTurnUpdate("wild", "red");
+			}
 		}else if(e.getSource() == btnWildBlue){
 			strWildColor = "blue";
 			blnWildPicker = false;
 			setComponentVisibility();
 			advanceTurn();
+			if(network != null){
+				network.sendTurnUpdate("wild", "blue");
+			}
 		}else if(e.getSource() == btnWildGreen){
 			strWildColor = "green";
 			blnWildPicker = false;
 			setComponentVisibility();
 			advanceTurn();
+			if(network != null){
+				network.sendTurnUpdate("wild", "green");
+			}
 		}else if(e.getSource() == btnWildYellow){
 			strWildColor = "yellow";
 			blnWildPicker = false;
 			setComponentVisibility();
 			advanceTurn();
+			if(network != null){
+				network.sendTurnUpdate("wild", "yellow");
+			}
 		}else if(e.getSource() == btnEliminatedOK){
 			blnEliminated = false;
 			blnPlayerEliminated[0] = true;
@@ -625,10 +637,12 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			for(int i = 0; i < intDiscardPileSize; i++){
 				strDiscardPile[i] = model.strDiscardPile[i];
 			}
-			// Copy local player hand (index 0)
-			intHandSize = model.intHandSizes[0];
+			
+			// Copy local player hand using the correct player index
+			int intMyIndex = (controller != null) ? controller.getLocalPlayerIndex() : 0;
+			intHandSize = model.intHandSizes[intMyIndex];
 			for(int i = 0; i < intHandSize; i++){
-				strPlayHand[i] = model.strHands[0][i];
+				strPlayHand[i] = model.strHands[intMyIndex][i];
 			}
 			// Copy turn order
 			for(int i = 0; i < 3; i++){
@@ -637,10 +651,18 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			intCurrentTurn = model.intCurrentTurn;
 			blnClockwise = model.blnClockwise;
 			// Copy card counts
-			intCardCount1 = model.intHandSizes[0];
-			intCardCount2 = model.intHandSizes[1];
-			intCardCount3 = model.intHandSizes[2];
-			// Copy deck for image lookup
+			intMyIndex = (controller != null) ? controller.getLocalPlayerIndex() : 0;  // ← no 'int' here
+			intCardCount1 = model.intHandSizes[intMyIndex];
+
+			int intOppSlot = 2;
+			for(int i = 0; i < 3; i++){
+				if(i != intMyIndex){
+					if(intOppSlot == 2){ intCardCount2 = model.intHandSizes[i]; }
+					else { intCardCount3 = model.intHandSizes[i]; }
+					intOppSlot++;
+				}
+			}
+
 			intDeckSize = model.intDeckSize;
 			for(int i = 0; i < intDeckSize; i++){
 				strDeck[i] = model.strDeck[i];
@@ -886,6 +908,9 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			return;
 		}
 		advanceTurn();
+		if(network != null){
+			network.sendTurnUpdate(strCardName, strWildColor);
+		}
 	}
 	
 	// move to next player
@@ -1684,6 +1709,8 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 					repaint();
 				}else if(strMessage.startsWith("GAMEOVER")){
 					showGameOver(strMessage);
+				}else if(strMessage.startsWith("TURN|")){
+					advanceTurn();
 				}else if(strMessage.startsWith("SETUP|")){
 					// Parse the host's dealt hands
 					String[] strParts = strMessage.split("\\|");			

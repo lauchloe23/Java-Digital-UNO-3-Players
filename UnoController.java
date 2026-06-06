@@ -13,6 +13,7 @@ public class UnoController implements ActionListener{
 	private boolean blnConnected = false;
 	private boolean blnGameStarted = false;
 	private boolean blnJoinerReady = false;
+	private int intLocalPlayerIndex = 0;
 	
 	//Methods
 	public void actionPerformed(ActionEvent evt){
@@ -20,6 +21,10 @@ public class UnoController implements ActionListener{
 			String strMessage = network.getLastMessage();
 			handleNetworkMessage(strMessage);
 		}
+	}
+	
+	public int getLocalPlayerIndex(){
+		return intLocalPlayerIndex;
 	}
 	/*
 	public void handleNetworkMessage(String strMessage){
@@ -77,6 +82,7 @@ public class UnoController implements ActionListener{
 	
 	public boolean joinGame(String strIP){
 		blnIsHost = false;
+		intLocalPlayerIndex = 1; 
 		blnConnected = network.connectServer(strIP, intDefaultPort);
 		return blnConnected;
 	}
