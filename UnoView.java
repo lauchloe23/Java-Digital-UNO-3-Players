@@ -336,8 +336,8 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 									blnNetworkReady = true;
 									chatArea.append("[GAME MESSAGE] Connected to host: " + strIP + "\n");
 									chatArea.append("[GAME MESSAGE] Enter your name and press START GAME\n");
-									blnChat = true;
-									setComponentVisibility();
+									// blnChat = true;
+									// setComponentVisibility();
 								}else{
 									chatArea.append("[GAME MESSAGE] Could not connect. Check the IP and try again.\n");
 									btnHost.setEnabled(true);

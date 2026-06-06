@@ -298,24 +298,17 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			chatArea.append("[GAME MESSAGE] Waiting for player to join...\n");
 			btnHost.setEnabled(false);
 			btnJoin.setEnabled(false);
+			blnNetworkReady = true; // ← set ready immediately so host can press START
 			Thread hostThread = new Thread(new Runnable(){
 				public void run(){
 					boolean blnWorked = (controller != null) && controller.hostGame();
 					SwingUtilities.invokeLater(new Runnable(){
 						public void run(){
 							if(blnWorked){
-								// blnNetworkReady = true;
-								String strHostIP = "unknown";
-								try{
-									strHostIP = java.net.InetAddress.getLocalHost().getHostAddress();
-								}catch(Exception ex){
-									strHostIP = "unknown";
-								}
+								String strHostIP = getLocalIPAddress(); // ← use the reliable method
 								chatArea.append("[GAME MESSAGE] Player connected! Your IP is: " + strHostIP + "\n");
 								chatArea.append("[GAME MESSAGE] Tell your partner to enter that IP and click JOIN GAME (port 8080)\n");
 								ipField.setText(strHostIP);
-								// blnChat = true;
-								// setComponentVisibility();
 							}else{
 								chatArea.append("[GAME MESSAGE] Could not host game. Port may already be in use.\n");
 								blnNetworkReady = false;
@@ -1740,6 +1733,31 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	//added
 	private String getLocalIPAddress(){
 		try{
+			java.util.Enumeration<java.net.NetworkInterface> interfaces = java.net.NetworkInterface.getNetworkInterfaces();
+			while(interfaces.hasMoreElements()){
+				java.net.NetworkInterface iface = interfaces.nextElement();
+				// skip loopback and inactive interfaces
+				if(iface.isLoopback() || !iface.isUp()){
+					continue;
+				}
+				java.util.Enumeration<java.net.InetAddress> addresses = iface.getInetAddresses();
+				while(addresses.hasMoreElements()){
+					java.net.InetAddress addr = addresses.nextElement();
+					// only want IPv4 site-local addresses (192.168.x.x, 10.x.x.x, 172.16.x.x)
+					if(addr instanceof java.net.Inet4Address && addr.isSiteLocalAddress()){
+						return addr.getHostAddress();
+					}
+				}
+			}
+		}catch(Exception e){
+			System.out.println("Could not get local IP: " + e.getMessage());
+		}
+		// fallback
+		return "127.0.0.1";
+	}
+	/*
+	private String getLocalIPAddress(){
+		try{
 			Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
 			
 			while(interfaces.hasMoreElements()){
@@ -1769,6 +1787,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		
 		return "unknown";
 	}
+	*/
 
 	// Constructor
 	public UnoView(){
