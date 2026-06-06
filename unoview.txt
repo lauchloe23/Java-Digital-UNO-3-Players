@@ -10,6 +10,9 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.Random;
 
+import java.util.Enumeration;
+import java.net.*;
+
 public class UnoView extends JPanel implements ActionListener, MouseListener, KeyListener{
 	// Properties
 	final int intWidth = 1280;
@@ -179,10 +182,33 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				}else{
 					strName = strTyped;
 					strPlayNames[0] = strName;
-					if(controller != null){
+					
+					/*
+					if(controller != null && controller.isHost()){
+						// Only the host shuffles, deals, and broadcasts SETUP
 						controller.startGame(strName);
+						startGame();
+					}else{
+						// Joining player: just send the join message and wait for SETUP
+						if(network != null){
+							network.sendJoin(strName);
+						}
+						chatArea.append("[GAME MESSAGE] Waiting for host to start game...\n");
 					}
-					startGame();
+					
+					*/
+					
+					if(controller != null){
+						boolean blnCanStartNow = controller.startGame(strName);
+
+						if(blnCanStartNow){
+							startGame();
+						}else{
+							chatArea.append("[GAME MESSAGE] Waiting for host setup...\n");
+							blnChat = true;
+							setComponentVisibility();
+						}
+					}
 				}
 			}
 		}else if(e.getSource() == btnHelp){
@@ -249,39 +275,130 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			if(!strTyped.equals("") && blnNetworkReady){
 				strName = strTyped;
 				strPlayNames[0] = strName;
+				/*
 				if(controller != null){
 					controller.startGame(strName);
 				}
 				startGame();
+				*/
+				
+				if(controller != null){
+					boolean blnCanStartNow = controller.startGame(strName);
+
+					if(blnCanStartNow){
+						startGame();
+					}else{
+						chatArea.append("[GAME MESSAGE] Waiting for host setup...\n");
+						blnChat = true;
+						setComponentVisibility();
+					}
+				}
 			}
 		}else if(e.getSource() == btnHost){
+			/*
+			chatArea.append("[GAME MESSAGE] Waiting for player to join...\n");
+			btnHost.setEnabled(false);
+			btnJoin.setEnabled(false);
+			Thread hostThread = new Thread(new Runnable(){
+				public void run(){
+					boolean blnWorked = (controller != null) && controller.hostGame();
+					SwingUtilities.invokeLater(new Runnable(){
+						public void run(){
+							if(blnWorked){
+								blnNetworkReady = true;
+								String strHostIP = "unknown";
+								// chatArea.append("[GAME MESSAGE] Player connected! Hosting on port 5555\n");
+								try{
+									strHostIP = java.net.InetAddress.getLocalHost().getHostAddress();
+								}catch(Exception ex){
+									strHostIP = "unknown";
+								}
+								chatArea.append("[GAME MESSAGE] Player connected! Your IP is: " + strHostIP + "\n");
+								chatArea.append("[GAME MESSAGE] Tell your partner to enter that IP and click JOIN\n");
+								ipField.setText(strHostIP);
+							}else{
+								chatArea.append("[GAME MESSAGE] Could not host game\n");
+								btnHost.setEnabled(true);
+								btnJoin.setEnabled(true);
+							}
+							repaint();
+						}
+					});
+				}
+			});
+			hostThread.start();
+			*/
+			
 			if(controller != null){
 				boolean blnWorked = controller.hostGame();
+				
 				if(blnWorked){
 					blnNetworkReady = true;
+					
+					String strHostIP = getLocalIPAddress();
+					
 					chatArea.append("[GAME MESSAGE] Hosting game on port 5555\n");
+					chatArea.append("[GAME MESSAGE] Give this IP to joiners: " + strHostIP + "\n");
+					chatArea.append("[GAME MESSAGE] Joiners should type this IP and click JOIN GAME.\n");
+					
+					ipField.setText(strHostIP);
+					blnChat = true;
+					setComponentVisibility();
 				}else{
-					chatArea.append("[GAME MESSAGE] Could not host game\n");
-					blnNetworkReady = true;
+					chatArea.append("[GAME MESSAGE] Could not host game. Port may already be used.\n");
+					blnNetworkReady = false;
 				}
+			}else{
+				blnNetworkReady = false;
+			}
+		}else if(e.getSource() == btnJoin){
+			/*
+			String strIP = ipField.getText().trim();
+
+			if(!strIP.equals("")){
+				chatArea.append("[GAME MESSAGE] Connecting to host: " + strIP + "...\n");
+				btnHost.setEnabled(false);
+				btnJoin.setEnabled(false);
+				Thread joinThread = new Thread(new Runnable(){
+					public void run(){
+						boolean blnWorked = (controller != null) && controller.joinGame(strIP);
+						SwingUtilities.invokeLater(new Runnable(){
+							public void run(){
+								if(blnWorked){
+									blnNetworkReady = true;
+									chatArea.append("[GAME MESSAGE] Connected to host: " + strIP + "\n");
+								}else{
+									chatArea.append("[GAME MESSAGE] Could not connect to host\n");
+									btnHost.setEnabled(true);
+									btnJoin.setEnabled(true);
+								}
+								repaint();
+							}
+						});
+					}
+				});
+				joinThread.start();
 			}else{
 				blnNetworkReady = true;
 			}
-
-		}else if(e.getSource() == btnJoin){
+			
+			*/
+			
 			String strIP = ipField.getText().trim();
 
-			if(controller != null && !strIP.equals("")){
+			if(controller != null && !strIP.equals("") && !strIP.equals("Enter host IP")){
 				boolean blnWorked = controller.joinGame(strIP);
+				
 				if(blnWorked){
 					blnNetworkReady = true;
 					chatArea.append("[GAME MESSAGE] Connected to host: " + strIP + "\n");
 				}else{
-					chatArea.append("[GAME MESSAGE] Could not connect to host\n");
-					blnNetworkReady = true;
+					chatArea.append("[GAME MESSAGE] Could not connect to host. Check host IP and firewall.\n");
+					blnNetworkReady = false;
 				}
 			}else{
-				blnNetworkReady = true;
+				chatArea.append("[GAME MESSAGE] Enter the host IP first.\n");
+				blnNetworkReady = false;
 			}
 		}else if(e.getSource() == chatInput){
 			String strMsg = chatInput.getText().trim();
@@ -1573,62 +1690,100 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	}
 	
 	public void processNetworkMessage(String strMessage){
-		if(strMessage.startsWith("[CHAT]")){
-			chatArea.append(strMessage + "\n");
-			chatArea.setCaretPosition(chatArea.getDocument().getLength()); 
-			blnChat = true;
-			setComponentVisibility();
-			repaint();
-		}else if(strMessage.startsWith("[GAME MESSAGE]")){
-			chatArea.append(strMessage + "\n");
-			blnChat = true;
-			setComponentVisibility();
-			repaint();
-		}else if(strMessage.startsWith("GAMEOVER")){
-			showGameOver(strMessage);
-		}else if(strMessage.startsWith("SETUP|")){
-			// Parse the host's dealt hands
-			String[] strParts = strMessage.split("\\|");			
-			if(strParts.length >= 6){
-				// Load each player's hand into the model
-				for(int p = 0; p < 3; p++){
-					model.intHandSizes[p] = 0;
-					if(!strParts[p + 1].equals("")){
-						String[] strCards = strParts[p + 1].split(",");
-						for(int c = 0; c < strCards.length; c++){
-							// Find this card in the model's deck by name
-							for(int d = 0; d < model.intDeckSize; d++){
-								if(model.strDeck[d][0].equals(strCards[c])){
-									model.strHands[p][model.intHandSizes[p]] = model.strDeck[d];
-									model.intHandSizes[p]++;
-									break;
+		SwingUtilities.invokeLater(new Runnable(){
+			public void run(){
+				if(strMessage.startsWith("[CHAT]")){
+					chatArea.append(strMessage + "\n");
+					chatArea.setCaretPosition(chatArea.getDocument().getLength()); 
+					blnChat = true;
+					setComponentVisibility();
+					repaint();
+				}else if(strMessage.startsWith("[GAME MESSAGE]")){
+					chatArea.append(strMessage + "\n");
+					chatArea.setCaretPosition(chatArea.getDocument().getLength()); // Fix 4: added auto-scroll
+					blnChat = true;
+					setComponentVisibility();
+					repaint();
+				}else if(strMessage.startsWith("GAMEOVER")){
+					showGameOver(strMessage);
+				}else if(strMessage.startsWith("SETUP|")){
+					// Parse the host's dealt hands
+					String[] strParts = strMessage.split("\\|");			
+					if(strParts.length >= 6){
+						// Load each player's hand into the model
+						for(int p = 0; p < 3; p++){
+							model.intHandSizes[p] = 0;
+							if(!strParts[p + 1].equals("")){
+								String[] strCards = strParts[p + 1].split(",");
+								for(int c = 0; c < strCards.length; c++){
+									// Find this card in the model's deck by name
+									for(int d = 0; d < model.intDeckSize; d++){
+										if(model.strDeck[d][0].equals(strCards[c])){
+											model.strHands[p][model.intHandSizes[p]] = model.strDeck[d];
+											model.intHandSizes[p]++;
+											break;
+										}
+									}
 								}
 							}
 						}
+						
+						// Load turn order
+						String[] strOrder = strParts[4].split(",");
+						for(int i = 0; i < 3 && i < strOrder.length; i++){
+							model.intTurnOrder[i] = Integer.parseInt(strOrder[i]);
+						}
+						model.intCurrentTurn = 0;
+						
+						// Set top discard
+						String strTopName = strParts[5];
+						for(int d = 0; d < model.intDeckSize; d++){
+							if(model.strDeck[d][0].equals(strTopName)){
+								model.strDiscardPile[0] = model.strDeck[d];
+								model.intDiscardPileSize = 1;
+								break;
+							}
+						}
+						
+						// sync view from model
+						startGame();
 					}
 				}
-				
-				// Load turn order
-				String[] strOrder = strParts[4].split(",");
-				for(int i = 0; i < 3 && i < strOrder.length; i++){
-					model.intTurnOrder[i] = Integer.parseInt(strOrder[i]);
-				}
-				model.intCurrentTurn = 0;
-				
-				// Set top discard
-				String strTopName = strParts[5];
-				for(int d = 0; d < model.intDeckSize; d++){
-					if(model.strDeck[d][0].equals(strTopName)){
-						model.strDiscardPile[0] = model.strDeck[d];
-						model.intDiscardPileSize = 1;
-						break;
-					}
-				}
-				
-				// sync view from model
-				startGame();
 			}
+		});
+	}
+
+	//added
+	private String getLocalIPAddress(){
+		try{
+			Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+			
+			while(interfaces.hasMoreElements()){
+				NetworkInterface networkInterface = interfaces.nextElement();
+				
+				if(networkInterface.isLoopback() || !networkInterface.isUp()){
+					continue;
+				}
+				
+				Enumeration<InetAddress> addresses = networkInterface.getInetAddresses();
+				
+				while(addresses.hasMoreElements()){
+					InetAddress address = addresses.nextElement();
+					
+					if(address instanceof Inet4Address){
+						String strIP = address.getHostAddress();
+						
+						if(strIP.startsWith("192.168.") || strIP.startsWith("10.") || strIP.startsWith("172.")){
+							return strIP;
+						}
+					}
+				}
+			}
+		}catch(Exception e){
+			System.out.println("Could not find local IP: " + e.getMessage());
 		}
+		
+		return "unknown";
 	}
 
 	// Constructor
