@@ -10,6 +10,9 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.Random;
 
+import java.util.Enumeration;
+import java.net.*;
+
 public class UnoView extends JPanel implements ActionListener, MouseListener, KeyListener{
 	// Properties
 	final int intWidth = 1280;
@@ -179,6 +182,8 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				}else{
 					strName = strTyped;
 					strPlayNames[0] = strName;
+					
+					/*
 					if(controller != null && controller.isHost()){
 						// Only the host shuffles, deals, and broadcasts SETUP
 						controller.startGame(strName);
@@ -189,6 +194,20 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 							network.sendJoin(strName);
 						}
 						chatArea.append("[GAME MESSAGE] Waiting for host to start game...\n");
+					}
+					
+					*/
+					
+					if(controller != null){
+						boolean blnCanStartNow = controller.startGame(strName);
+
+						if(blnCanStartNow){
+							startGame();
+						}else{
+							chatArea.append("[GAME MESSAGE] Waiting for host setup...\n");
+							blnChat = true;
+							setComponentVisibility();
+						}
 					}
 				}
 			}
@@ -256,12 +275,27 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			if(!strTyped.equals("") && blnNetworkReady){
 				strName = strTyped;
 				strPlayNames[0] = strName;
+				/*
 				if(controller != null){
 					controller.startGame(strName);
 				}
 				startGame();
+				*/
+				
+				if(controller != null){
+					boolean blnCanStartNow = controller.startGame(strName);
+
+					if(blnCanStartNow){
+						startGame();
+					}else{
+						chatArea.append("[GAME MESSAGE] Waiting for host setup...\n");
+						blnChat = true;
+						setComponentVisibility();
+					}
+				}
 			}
 		}else if(e.getSource() == btnHost){
+			/*
 			chatArea.append("[GAME MESSAGE] Waiting for player to join...\n");
 			btnHost.setEnabled(false);
 			btnJoin.setEnabled(false);
@@ -293,7 +327,32 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				}
 			});
 			hostThread.start();
+			*/
+			
+			if(controller != null){
+				boolean blnWorked = controller.hostGame();
+				
+				if(blnWorked){
+					blnNetworkReady = true;
+					
+					String strHostIP = getLocalIPAddress();
+					
+					chatArea.append("[GAME MESSAGE] Hosting game on port 5555\n");
+					chatArea.append("[GAME MESSAGE] Give this IP to joiners: " + strHostIP + "\n");
+					chatArea.append("[GAME MESSAGE] Joiners should type this IP and click JOIN GAME.\n");
+					
+					ipField.setText(strHostIP);
+					blnChat = true;
+					setComponentVisibility();
+				}else{
+					chatArea.append("[GAME MESSAGE] Could not host game. Port may already be used.\n");
+					blnNetworkReady = false;
+				}
+			}else{
+				blnNetworkReady = false;
+			}
 		}else if(e.getSource() == btnJoin){
+			/*
 			String strIP = ipField.getText().trim();
 
 			if(controller != null && !strIP.equals("")){
@@ -307,6 +366,25 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				}
 			}else{
 				blnNetworkReady = true;
+			}
+			
+			*/
+			
+			String strIP = ipField.getText().trim();
+
+			if(controller != null && !strIP.equals("") && !strIP.equals("Enter host IP")){
+				boolean blnWorked = controller.joinGame(strIP);
+				
+				if(blnWorked){
+					blnNetworkReady = true;
+					chatArea.append("[GAME MESSAGE] Connected to host: " + strIP + "\n");
+				}else{
+					chatArea.append("[GAME MESSAGE] Could not connect to host. Check host IP and firewall.\n");
+					blnNetworkReady = false;
+				}
+			}else{
+				chatArea.append("[GAME MESSAGE] Enter the host IP first.\n");
+				blnNetworkReady = false;
 			}
 		}else if(e.getSource() == chatInput){
 			String strMsg = chatInput.getText().trim();
@@ -1659,6 +1737,39 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				}
 			}
 		});
+	}
+
+	//added
+	private String getLocalIPAddress(){
+		try{
+			Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+			
+			while(interfaces.hasMoreElements()){
+				NetworkInterface networkInterface = interfaces.nextElement();
+				
+				if(networkInterface.isLoopback() || !networkInterface.isUp()){
+					continue;
+				}
+				
+				Enumeration<InetAddress> addresses = networkInterface.getInetAddresses();
+				
+				while(addresses.hasMoreElements()){
+					InetAddress address = addresses.nextElement();
+					
+					if(address instanceof Inet4Address){
+						String strIP = address.getHostAddress();
+						
+						if(strIP.startsWith("192.168.") || strIP.startsWith("10.") || strIP.startsWith("172.")){
+							return strIP;
+						}
+					}
+				}
+			}
+		}catch(Exception e){
+			System.out.println("Could not find local IP: " + e.getMessage());
+		}
+		
+		return "unknown";
 	}
 
 	// Constructor

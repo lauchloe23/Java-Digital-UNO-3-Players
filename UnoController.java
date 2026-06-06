@@ -11,6 +11,7 @@ public class UnoController implements ActionListener{
 	private static final int intDefaultPort = 5555;
 	private boolean blnIsHost = false;
 	private boolean blnConnected = false;
+	private boolean blnGameStarted = false;
 	
 	//Methods
 	public void actionPerformed(ActionEvent evt){
@@ -19,7 +20,7 @@ public class UnoController implements ActionListener{
 			handleNetworkMessage(strMessage);
 		}
 	}
-	
+	/*
 	public void handleNetworkMessage(String strMessage){
 		System.out.println("Network Message: " + strMessage);
 		
@@ -29,6 +30,38 @@ public class UnoController implements ActionListener{
 					view.processNetworkMessage(strMessage);
 				}
 			});
+		}
+	}
+	
+	*/
+	
+	public void handleNetworkMessage(String strMessage){
+		System.out.println("Network Message: " + strMessage);
+		
+		if(strMessage.startsWith("READY|")){
+			if(blnIsHost && blnGameStarted){
+				sendCurrentSetup();
+			}
+		}
+		
+		if(view != null){
+			SwingUtilities.invokeLater(new Runnable(){
+				public void run(){
+					view.processNetworkMessage(strMessage);
+				}
+			});
+		}
+	}
+	
+	private void sendCurrentSetup(){
+		if(network != null){
+			String[] strDiscardTop = model.getTopDiscard();
+			
+			if(strDiscardTop == null){
+				strDiscardTop = new String[]{"", "", "", ""};
+			}
+			
+			network.sendGameSetup(model.strHands, model.intHandSizes, model.intTurnOrder, strDiscardTop);
 		}
 	}
 	
@@ -49,7 +82,7 @@ public class UnoController implements ActionListener{
 			network.sendPlayerChat(strPlayerName, strMessage);
 		}
 	}
-	
+	/*
 	public void startGame(String strPlayerName){
 		model.strPlayerNames[0] = strPlayerName;
 		model.startGame();
@@ -65,6 +98,35 @@ public class UnoController implements ActionListener{
 			}
 		}
 	}
+	*/
+	public boolean startGame(String strPlayerName){
+		if(!blnConnected){
+			return false;
+		}
+		
+		model.strPlayerNames[0] = strPlayerName;
+		
+		if(network != null){
+			network.sendJoin(strPlayerName);
+		}
+		
+		if(!blnIsHost){
+			if(network != null){
+				network.send("READY|" + strPlayerName);
+			}
+			return false;
+		}
+		
+		model.startGame();
+		blnGameStarted = true;
+		
+		if(network != null){
+			sendCurrentSetup();
+		}
+		
+		return true;
+	}
+		
 	
 	public boolean isHost(){
 		return blnIsHost;
