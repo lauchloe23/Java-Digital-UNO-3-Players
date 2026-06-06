@@ -8,10 +8,11 @@ public class UnoController implements ActionListener{
 	private UnoNetwork network;
 	
 	// network varaible
-	private static final int intDefaultPort = 8080;
+	private static final int intDefaultPort = 5555;
 	private boolean blnIsHost = false;
 	private boolean blnConnected = false;
 	private boolean blnGameStarted = false;
+	private boolean blnJoinerReady = false;
 	
 	//Methods
 	public void actionPerformed(ActionEvent evt){
@@ -40,6 +41,7 @@ public class UnoController implements ActionListener{
 		
 		if(strMessage.startsWith("READY|")){
 			if(blnIsHost){
+				blnJoinerReady = true;
 				if(blnGameStarted){
 					sendCurrentSetup();
 				}
@@ -115,7 +117,7 @@ public class UnoController implements ActionListener{
 				network.sendJoin(strPlayerName);
 				network.send("READY|" + strPlayerName);
 			}
-			return false; // tells view to wait for SETUP
+			return false;
 		}
 		
 		// Host: full game setup

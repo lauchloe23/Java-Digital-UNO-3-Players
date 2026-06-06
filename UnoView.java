@@ -298,16 +298,17 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			chatArea.append("[GAME MESSAGE] Waiting for player to join...\n");
 			btnHost.setEnabled(false);
 			btnJoin.setEnabled(false);
-			blnNetworkReady = true; // ← set ready immediately so host can press START
+			// blnNetworkReady = true; 
 			Thread hostThread = new Thread(new Runnable(){
 				public void run(){
 					boolean blnWorked = (controller != null) && controller.hostGame();
 					SwingUtilities.invokeLater(new Runnable(){
 						public void run(){
 							if(blnWorked){
+								blnNetworkReady = true;
 								String strHostIP = getLocalIPAddress(); // ← use the reliable method
 								chatArea.append("[GAME MESSAGE] Player connected! Your IP is: " + strHostIP + "\n");
-								chatArea.append("[GAME MESSAGE] Tell your partner to enter that IP and click JOIN GAME (port 8080)\n");
+								chatArea.append("[GAME MESSAGE] Tell your partner to enter that IP and click JOIN GAME (port 5555)\n");
 								ipField.setText(strHostIP);
 							}else{
 								chatArea.append("[GAME MESSAGE] Could not host game. Port may already be in use.\n");
