@@ -314,8 +314,8 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 								chatArea.append("[GAME MESSAGE] Player connected! Your IP is: " + strHostIP + "\n");
 								chatArea.append("[GAME MESSAGE] Tell your partner to enter that IP and click JOIN GAME (port 8080)\n");
 								ipField.setText(strHostIP);
-								blnChat = true;
-								setComponentVisibility();
+								// blnChat = true;
+								// setComponentVisibility();
 							}else{
 								chatArea.append("[GAME MESSAGE] Could not host game. Port may already be in use.\n");
 								btnHost.setEnabled(true);
