@@ -205,8 +205,8 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 							startGame();
 						}else{
 							chatArea.append("[GAME MESSAGE] Waiting for host setup...\n");
-							blnChat = true;
-							setComponentVisibility();
+							// blnChat = true;
+							// setComponentVisibility();
 						}
 					}
 				}
@@ -1672,13 +1672,19 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				if(strMessage.startsWith("[CHAT]")){
 					chatArea.append(strMessage + "\n");
 					chatArea.setCaretPosition(chatArea.getDocument().getLength()); 
-					blnChat = true;
+					boolean blnGameplayScreen = blnTurnScreen || blnWaitScreen || blnDisplayCard || blnPickCard;
+					if(blnGameplayScreen){
+						blnChat = true;
+					}
 					setComponentVisibility();
 					repaint();
 				}else if(strMessage.startsWith("[GAME MESSAGE]")){
 					chatArea.append(strMessage + "\n");
-					chatArea.setCaretPosition(chatArea.getDocument().getLength()); // Fix 4: added auto-scroll
-					blnChat = true;
+					chatArea.setCaretPosition(chatArea.getDocument().getLength());
+					boolean blnGameplayScreen = blnTurnScreen || blnWaitScreen || blnDisplayCard || blnPickCard;
+					if(blnGameplayScreen){
+						blnChat = true;
+					}
 					setComponentVisibility();
 					repaint();
 				}else if(strMessage.startsWith("GAMEOVER")){

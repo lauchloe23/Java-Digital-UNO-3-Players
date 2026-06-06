@@ -57,7 +57,7 @@ public class UnoModel{
 	}
 	
 	//loading card decks
-	private void loadDeck(){
+	public void loadDeck(){
 		intDeckSize = 0;
 		// try & catch reading csv file
 		try{

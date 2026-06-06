@@ -106,21 +106,22 @@ public class UnoController implements ActionListener{
 		
 		model.strPlayerNames[0] = strPlayerName;
 		
-		if(network != null){
-			network.sendJoin(strPlayerName);
-		}
-		
 		if(!blnIsHost){
+			// Joiner: load the deck so card lookups work when SETUP arrives
+			model.loadDeck();
 			if(network != null){
+				network.sendJoin(strPlayerName);
 				network.send("READY|" + strPlayerName);
 			}
-			return false;
+			return false; // tells view to wait for SETUP
 		}
 		
+		// Host: full game setup
 		model.startGame();
 		blnGameStarted = true;
 		
 		if(network != null){
+			network.sendJoin(strPlayerName);
 			sendCurrentSetup();
 		}
 		
