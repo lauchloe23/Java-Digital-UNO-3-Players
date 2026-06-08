@@ -418,8 +418,9 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			fadeToScreen("play");
 			// showPlayScreen();
 		}else if(blnFlipFirst){
-			// adance from flip first screen to first player's turn
-			if(intTurnOrder[intCurrentTurn] == 0){
+			// advance from flip first screen to first player's turn
+			int intMyIndex = (controller != null) ? controller.getLocalPlayerIndex() : 0;
+			if(intTurnOrder[intCurrentTurn] == intMyIndex){
 				fadeToScreen("turn");
 			}else{
 				fadeToScreen("wait");
@@ -946,9 +947,10 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			return;
 		}
 		
-		if(blnPlayerEliminated[0]){
+		int intMyIndex = (controller != null) ? controller.getLocalPlayerIndex() : 0;
+		if(blnPlayerEliminated[intMyIndex]){
 			fadeToScreen("wait");
-		}else if(intTurnOrder[intCurrentTurn] == 0){
+		}else if(intTurnOrder[intCurrentTurn] == intMyIndex){
 			fadeToScreen("turn");
 		}else{
 			fadeToScreen("wait");
@@ -1710,7 +1712,13 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				}else if(strMessage.startsWith("GAMEOVER")){
 					showGameOver(strMessage);
 				}else if(strMessage.startsWith("TURN|")){
-					advanceTurn();
+					if(blnWaitScreen){
+						String[] strTurnParts = strMessage.split("\\|");
+						if(strTurnParts.length >= 3 && !strTurnParts[2].equals("")){
+							strWildColor = strTurnParts[2];
+						}
+						advanceTurn();
+					}
 				}else if(strMessage.startsWith("SETUP|")){
 					// Parse the host's dealt hands
 					String[] strParts = strMessage.split("\\|");			

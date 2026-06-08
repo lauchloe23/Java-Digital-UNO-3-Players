@@ -1760,6 +1760,34 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 
 	//added
 	private String getLocalIPAddress(){
+		String strBestIP = "127.0.0.1";
+		try{
+			java.util.Enumeration<java.net.NetworkInterface> interfaces = java.net.NetworkInterface.getNetworkInterfaces();
+			while(interfaces.hasMoreElements()){
+				java.net.NetworkInterface iface = interfaces.nextElement();
+				if(iface.isLoopback() || !iface.isUp()){
+					continue;
+				}
+				java.util.Enumeration<java.net.InetAddress> addresses = iface.getInetAddresses();
+				while(addresses.hasMoreElements()){
+					java.net.InetAddress addr = addresses.nextElement();
+					if(addr instanceof java.net.Inet4Address && addr.isSiteLocalAddress()){
+						System.out.println("Found IP on [" + iface.getDisplayName() + "]: " + addr.getHostAddress());
+						String strName = iface.getDisplayName().toLowerCase();
+						if(strName.contains("wi-fi") || strName.contains("wifi") || strName.contains("wireless") || strName.contains("ethernet")){
+							return addr.getHostAddress();
+						}
+						strBestIP = addr.getHostAddress(); // fallback 
+					}
+				}
+			}
+		}catch(Exception e){
+			System.out.println("Could not get local IP: " + e.getMessage());
+		}
+		return strBestIP;
+	}
+	/*
+	private String getLocalIPAddress(){
 		try{
 			java.util.Enumeration<java.net.NetworkInterface> interfaces = java.net.NetworkInterface.getNetworkInterfaces();
 			while(interfaces.hasMoreElements()){
@@ -1783,6 +1811,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		// fallback
 		return "127.0.0.1";
 	}
+	*/
 	/*
 	private String getLocalIPAddress(){
 		try{
