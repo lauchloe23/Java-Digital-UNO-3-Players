@@ -244,7 +244,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			setComponentVisibility();
 			advanceTurn();
 			if(network != null){
-				network.sendTurnUpdate("wild", "red");
+				network.sendTurnUpdate("wild", "red", model.intHandSizes);
 			}
 		}else if(e.getSource() == btnWildBlue){
 			strWildColor = "blue";
@@ -252,7 +252,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			setComponentVisibility();
 			advanceTurn();
 			if(network != null){
-				network.sendTurnUpdate("wild", "blue");
+				network.sendTurnUpdate("wild", "blue", model.intHandSizes);
 			}
 		}else if(e.getSource() == btnWildGreen){
 			strWildColor = "green";
@@ -260,7 +260,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			setComponentVisibility();
 			advanceTurn();
 			if(network != null){
-				network.sendTurnUpdate("wild", "green");
+				network.sendTurnUpdate("wild", "green", model.intHandSizes);
 			}
 		}else if(e.getSource() == btnWildYellow){
 			strWildColor = "yellow";
@@ -268,7 +268,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			setComponentVisibility();
 			advanceTurn();
 			if(network != null){
-				network.sendTurnUpdate("wild", "yellow");
+				network.sendTurnUpdate("wild", "yellow", model.intHandSizes);
 			}
 		}else if(e.getSource() == btnEliminatedOK){
 			blnEliminated = false;
@@ -915,7 +915,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		}
 		advanceTurn();
 		if(network != null){
-			network.sendTurnUpdate(strCardName, strWildColor);
+			network.sendTurnUpdate(strCardName, strWildColor, model.intHandSizes);
 		}
 	}
 	
@@ -1716,13 +1716,75 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 					repaint();
 				}else if(strMessage.startsWith("GAMEOVER")){
 					showGameOver(strMessage);
+					
 				}else if(strMessage.startsWith("TURN|")){
 					if(blnWaitScreen){
 						String[] strTurnParts = strMessage.split("\\|");
+						String strCardPlayed = strTurnParts.length >= 2 ? strTurnParts[1] : "";
 						if(strTurnParts.length >= 3 && !strTurnParts[2].equals("")){
 							strWildColor = strTurnParts[2];
 						}
+						
+						/*
+						
+						if(model != null){
+							int intMyIndex = (controller != null) ? controller.getLocalPlayerIndex() : 0;
+							intCardCount1 = model.intHandSizes[intMyIndex];
+							int intOppSlot = 0;
+							for(int i = 0; i < 3; i++){
+								if(i != intMyIndex){
+									if (intOppSlot == 0) intCardCount2 = model.intHandSizes[i];
+									else                 intCardCount3 = model.intHandSizes[i];
+									intOppSlot++;
+								}
+							}
+						}
+						*/
+						
+						if (model != null && !strCardPlayed.equals("") && !strCardPlayed.equals("wild")) {
+							for (int d = 0; d < model.intDeckSize; d++) {
+								if (model.strDeck[d][0].equals(strCardPlayed)) {
+									model.strDiscardPile[model.intDiscardPileSize] = model.strDeck[d];
+									model.intDiscardPileSize++;
+									break;
+								}
+							}
+						}
+						
+						
+						if (model != null && strTurnParts.length >= 4) {
+							String[] strSizes = strTurnParts[3].split(",");
+							if (strSizes.length == 3) {
+								for (int i = 0; i < 3; i++) {
+									model.intHandSizes[i] = Integer.parseInt(strSizes[i]);
+								}
+							}
+							int intMyIndex = (controller != null) ? controller.getLocalPlayerIndex() : 0;
+							intCardCount1 = model.intHandSizes[intMyIndex];
+							int intOppSlot = 0;
+							for (int i = 0; i < 3; i++) {
+								if (i != intMyIndex) {
+									if (intOppSlot == 0) intCardCount2 = model.intHandSizes[i];
+									else                 intCardCount3 = model.intHandSizes[i];
+									intOppSlot++;
+								}
+							}
+							// Also sync the view's local discard pile
+							intDiscardPileSize = model.intDiscardPileSize;
+							for (int i = 0; i < intDiscardPileSize; i++) {
+								strDiscardPile[i] = model.strDiscardPile[i];
+							}
+						}
+										
+						String strValue = strCardPlayed.replace("yellow","").replace("green","")
+														.replace("blue","").replace("red","");
+						boolean blnIsSkip = strValue.equals("skip")
+										 || strValue.equals("draw2")
+										 || strValue.equals("wilddraw4");
 						advanceTurn();
+						if (blnIsSkip) {
+							advanceTurn();
+						}
 					}
 				}else if(strMessage.startsWith("SETUP|")){
 					// Parse the host's dealt hands

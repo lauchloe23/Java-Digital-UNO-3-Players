@@ -28,9 +28,10 @@ public class UnoNetwork implements ActionListener{
 		return ssm.connect();
 	}
 	
-	public void sendTurnUpdate(String strCardPlayed, String strWildColor){
+	public void sendTurnUpdate(String strCardPlayed, String strWildColor, int[] intHandSizes){
 		if(ssm != null){
-			ssm.sendText("TURN|" + strCardPlayed + "|" + strWildColor);
+			String strSizes = intHandSizes[0] + "," + intHandSizes[1] + "," + intHandSizes[2];
+			ssm.sendText("TURN|" + strCardPlayed + "|" + strWildColor + "|" + strSizes);
 		}
 	}
 	
