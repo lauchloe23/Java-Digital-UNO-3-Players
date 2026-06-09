@@ -654,6 +654,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			// Copy card counts
 			// intMyIndex = (controller != null) ? controller.getLocalPlayerIndex() : 0;  // ← no 'int' here
 			// intCardCount1 = model.intHandSizes[intMyIndex];
+			intCardCount1 = intHandSize;
 
 			int intOppSlot = 0;
 			for(int i = 0; i < 3; i++){
