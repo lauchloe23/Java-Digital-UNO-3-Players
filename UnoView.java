@@ -1515,7 +1515,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		
 		g2.setFont(bodyFont);
 		g2.setColor(Color.WHITE);
-		String[] strLines = {"• Match the top card of the discard pile by COLOR or NUMBER.", "• If you cannot play, draw a card from the deck.", "• Special cards: Skip, Draw Two, Wild, Wild Draw Four", "• First player to empty this hand wins!", "• 'UNO' when you only have 1 card left or draw 2 penalty cards.", "• You will be disqualify if you have 30+ cards", "• Click anywhere to continue to the Play"};
+		String[] strLines = {"• Match the top card of the discard pile by COLOR or NUMBER.", "• If you cannot play, draw a card from the deck.", "• Special cards: Skip, Draw Two, Wild, Wild Draw Four", "• First player to empty this hand wins!", "• Hand limit of 30 cards. Must play afterwards.", "• Click anywhere to continue to the Play"};
 		
 		int intY = 270;
 		String strText;
@@ -1687,7 +1687,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		if(intHandSize >= intMaxCards - 3){
 			g2.setColor(unoRed);
 			g2.setFont(subFont);
-			drawCenteredString(g2,"WARNING: " + (intMaxCards - intHandSize) + " cards until elimination!",640, 110);
+			drawCenteredString(g2,"WARNING: " + (intMaxCards - intHandSize) + " cards! MUST PLAY A CARD!",640, 110);
 		}
 
 		// Card slot dimensions & positions
