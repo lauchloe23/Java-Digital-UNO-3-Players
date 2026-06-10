@@ -194,6 +194,14 @@ public class UnoNetwork implements ActionListener{
 			ssm.sendText("GAMEOVER: " + strWinner + " has won!!!");
 		}
 	}
+
+	// send UNO reached message
+	/** Announces that a player has reached UNO (one card remaining). */
+	public void sendReachedUno(String strPlayerName){
+		if(ssm != null){
+			ssm.sendText("[GAME MESSAGE] " + strPlayerName + " has reached UNO!");
+		}
+	}
 	
 	// send game setup (dealt hands + turn order) 
 	/**

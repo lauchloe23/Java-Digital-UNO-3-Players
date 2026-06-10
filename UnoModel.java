@@ -63,6 +63,14 @@ public class UnoModel{
 	// wild card chosen color
 	/** The color declared by a player after playing a Wild card. Empty string if no active wild restriction exists. */
 	String strWildColor = "";
+
+	// last action info for broadcasting
+	/** Last played card name (for network/view sync) */
+	public String lastPlayedCard = "";
+	/** Last attack type (e.g., "draw2", "skip", "draw4") or empty if none */
+	public String lastAttackType = "";
+	/** Last attack target player index or -1 if none */
+	public int lastAttackTarget = -1;
 	
 	// game setup variables
 	/** Tracking whether the current game play has ended. */
@@ -305,6 +313,10 @@ public class UnoModel{
 		}
 		String[] strCard = strHands[intPlayer][intCardIndex];
 		String strCardName = strCard[0];
+		// record last played card
+		lastPlayedCard = strCardName;
+		lastAttackType = "";
+		lastAttackTarget = -1;
 		
 		// validate card play to be place on discard pile
 		if(!isValidPlay(strCardName)){
@@ -332,12 +344,13 @@ public class UnoModel{
 		
 		if(strCardName.startsWith("wild")){
 			strWildColor = "";
+			// wait for color choice before advancing turn
 			return true;
 		}
-		
+
 		// special cards effect
 		applyCardEffect(strCardName);
-		// next player's turn
+		// next player's turn (applyCardEffect will handle advancing)
 		return true;
 	}	
 	

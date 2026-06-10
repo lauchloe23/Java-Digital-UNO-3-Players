@@ -199,6 +199,17 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	 * e: The ActionEvent triggered by a user action
 	 */
 	public void actionPerformed(ActionEvent e){
+		// Periodic game-over detection (timer events)
+		if(model != null && model.isGameOver() && !blnGameOver){
+			blnGameOver = true;
+			strWinner = model.getWinner();
+			if(network != null){
+				network.sendGameOver(strWinner);
+			}
+			showGameOver(strWinner);
+			repaint();
+			return;
+		}
 		if(e.getSource() == playButton){
 			fadeToScreen("theme");
 		}else if(e.getSource() == btnStandard){
@@ -294,8 +305,11 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			}
 			
 			advanceTurn();
+			chatArea.append("[GAME MESSAGE] " + strName + " changed colour to RED\n");
+			chatArea.setCaretPosition(chatArea.getDocument().getLength());
 			if(network != null){
 				network.sendTurnUpdate("wild", "red", model.intHandSizes,model.intCurrentTurn);
+				network.sendColourChange(strName, "red");
 			}
 		}else if(e.getSource() == btnWildBlue){
 			strWildColor = "blue";
@@ -307,8 +321,11 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				model.intHandSizes[intMyIdx] = intHandSize;
 			}
 			advanceTurn();
+			chatArea.append("[GAME MESSAGE] " + strName + " changed colour to BLUE\n");
+			chatArea.setCaretPosition(chatArea.getDocument().getLength());
 			if(network != null){
 				network.sendTurnUpdate("wild", "blue", model.intHandSizes,model.intCurrentTurn);
+				network.sendColourChange(strName, "blue");
 			}
 		}else if(e.getSource() == btnWildGreen){
 			strWildColor = "green";
@@ -320,8 +337,11 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				model.intHandSizes[intMyIdx] = intHandSize;
 			}
 			advanceTurn();
+			chatArea.append("[GAME MESSAGE] " + strName + " changed colour to GREEN\n");
+			chatArea.setCaretPosition(chatArea.getDocument().getLength());
 			if(network != null){
 				network.sendTurnUpdate("wild", "green", model.intHandSizes,model.intCurrentTurn);
+				network.sendColourChange(strName, "green");
 			}
 		}else if(e.getSource() == btnWildYellow){
 			strWildColor = "yellow";
@@ -333,8 +353,11 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				model.intHandSizes[intMyIdx] = intHandSize;
 			}
 			advanceTurn();
+			chatArea.append("[GAME MESSAGE] " + strName + " changed colour to YELLOW\n");
+			chatArea.setCaretPosition(chatArea.getDocument().getLength());
 			if(network != null){
 				network.sendTurnUpdate("wild", "yellow", model.intHandSizes,model.intCurrentTurn);
+				network.sendColourChange(strName, "yellow");
 			}
 		}else if(e.getSource() == btnEliminatedOK){
 			blnEliminated = false;
@@ -972,6 +995,22 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			intHandSize++;
 			intCardCount1 = intHandSize;
 
+			// announce draw to others
+			chatArea.append("[GAME MESSAGE] " + strName + " has drawn a card\n");
+			chatArea.setCaretPosition(chatArea.getDocument().getLength());
+			if(network != null){
+				network.sendCardDrawn(strName);
+			}
+
+			// If player now has UNO (1 card), announce
+			if(intHandSize == 1){
+				chatArea.append("[GAME MESSAGE] " + strName + " has reached UNO!\n");
+				chatArea.setCaretPosition(chatArea.getDocument().getLength());
+				if(network != null){
+					network.sendReachedUno(strName);
+				}
+			}
+
 			if(intHandSize > intMaxCards){
 				blnEliminated = true;
 				setComponentVisibility();
@@ -1057,10 +1096,11 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		}
 		
 		
+
 		// Move card to discard pile
 		strDiscardPile[intDiscardPileSize] = strPlayHand[intIndex];
 		intDiscardPileSize++;
-		
+
 		// Lifting wild restriction when playing a non-wild card on top
 		if (!strCardName.startsWith("wild")) {
 			strWildColor = "";
@@ -1072,6 +1112,15 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		}
 		intHandSize--;
 		intCardCount1 = intHandSize;
+
+		// If player now has UNO (1 card), announce
+		if(intHandSize == 1){
+			chatArea.append("[GAME MESSAGE] " + strName + " has reached UNO!\n");
+			chatArea.setCaretPosition(chatArea.getDocument().getLength());
+			if(network != null){
+				network.sendReachedUno(strName);
+			}
+		}
 
 		// Clamp page
 		int intMaxPage = 0;
@@ -1087,29 +1136,111 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 
 		if(intHandSize == 0){
 			strWinner = strName;
+			if(network != null){
+				network.sendPlayerCard(strName, strCardName);
+				network.sendGameOver(strWinner);
+			}
 			fadeToScreen("gameover");
 			return;
 		}
-		
+
+		// Wild -> choose color
 		if(strCardName.startsWith("wild")){
 			strWildColor = "";
 			blnWildPicker = true;
 			setComponentVisibility();
 			repaint();
+			// announce the play
+			chatArea.append("[GAME MESSAGE] " + strName + " played WILD\n");
+			chatArea.setCaretPosition(chatArea.getDocument().getLength());
+			if(network != null){
+				network.sendPlayerCard(strName, strCardName);
+			}
 			return;
 		}
-		
+
+		// update model with our new hand size
+		int intMyIdx = (controller != null) ? controller.getLocalPlayerIndex() : 0;
 		if(model != null){
-			int intMyIdx = (controller != null) ? controller.getLocalPlayerIndex() : 0;
 			model.intHandSizes[intMyIdx] = intHandSize;
 		}
 
+		// Announce the play
+		chatArea.append("[GAME MESSAGE] " + strName + " played " + strCardName + "\n");
+		chatArea.setCaretPosition(chatArea.getDocument().getLength());
+		if(network != null){
+			network.sendPlayerCard(strName, strCardName);
+		}
+
+		String strValue = getCardValue(strCardName);
+
+		if(strValue.equals("skip")){
+			advanceTurn();
+			String strSkipped = strPlayNames[intTurnOrder[intCurrentTurn]];
+			advanceTurn();
+			chatArea.append("[GAME MESSAGE] " + strSkipped + " is skipped!\n");
+			chatArea.setCaretPosition(chatArea.getDocument().getLength());
+			if(network != null){
+				network.sendPlayerAttack(strName, "skip", strSkipped);
+			}
+			if(model != null) model.intCurrentTurn = intCurrentTurn;
+			if(network != null){
+				network.sendTurnUpdate(strCardName, "", model.intHandSizes, model.intCurrentTurn);
+			}
+			return;
+		} else if(strValue.equals("draw2")){
+			advanceTurn();
+			int intTarget = intTurnOrder[intCurrentTurn];
+			String strTargetName = strPlayNames[intTarget];
+			if(model != null){
+				model.intHandSizes[intTarget] += 2;
+			} else {
+				if(intTarget == 0) intCardCount1 += 2;
+				else if(intTarget == 1) intCardCount2 += 2;
+				else if(intTarget == 2) intCardCount3 += 2;
+			}
+			chatArea.append("[GAME MESSAGE] " + strTargetName + " draws 2 cards and is skipped!\n");
+			chatArea.setCaretPosition(chatArea.getDocument().getLength());
+			if(network != null){
+				network.sendPlayerAttack(strName, "draw2", strTargetName);
+			}
+			advanceTurn();
+			if(model != null) model.intCurrentTurn = intCurrentTurn;
+			if(network != null){
+				network.sendTurnUpdate(strCardName, "", model.intHandSizes, model.intCurrentTurn);
+			}
+			return;
+		} else if(strValue.equals("wilddraw4")){
+			advanceTurn();
+			int intTarget = intTurnOrder[intCurrentTurn];
+			String strTargetName = strPlayNames[intTarget];
+			if(model != null){
+				model.intHandSizes[intTarget] += 4;
+			} else {
+				if(intTarget == 0) intCardCount1 += 4;
+				else if(intTarget == 1) intCardCount2 += 4;
+				else if(intTarget == 2) intCardCount3 += 4;
+			}
+			chatArea.append("[GAME MESSAGE] " + strTargetName + " draws 4 cards and is skipped!\n");
+			chatArea.setCaretPosition(chatArea.getDocument().getLength());
+			if(network != null){
+				network.sendPlayerAttack(strName, "wilddraw4", strTargetName);
+			}
+			advanceTurn();
+			if(model != null) model.intCurrentTurn = intCurrentTurn;
+			if(network != null){
+				network.sendTurnUpdate(strCardName, "", model.intHandSizes, model.intCurrentTurn);
+			}
+			return;
+		}
+
+		// Normal card -> advance once
 		advanceTurn();
 		if(model != null){
 			model.intCurrentTurn = intCurrentTurn;
 		}
 		if(network != null){
-			network.sendTurnUpdate(strCardName, strWildColor, model.intHandSizes, model.intCurrentTurn);
+			network.sendTurnUpdate(strCardName, "", model.intHandSizes, model.intCurrentTurn);
 		}
 	}
 	
