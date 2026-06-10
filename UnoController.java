@@ -3,19 +3,32 @@ import javax.swing.SwingUtilities;
 
 public class UnoController implements ActionListener{
 	//Properties
+	/** Reference to the data of the state (model)*/
 	private UnoModel model;
+	/** Reference to the graphics UI and screen (view)*/
 	private UnoView view;
+	/** Reference to networking socket provider (ssm)*/
 	private UnoNetwork network;
 	
 	// network varaible
+	/** Default network connection port number*/
 	private static final int intDefaultPort = 5555;
+	/** Identifies if application/this player acts as host server*/
 	private boolean blnIsHost = false;
+	/** Identifies if a stable/consistent network establish*/
 	private boolean blnConnected = false;
+	/** Track if the core gameplay has started*/
 	private boolean blnGameStarted = false;
+	/** Track if the connecting client player if fully loaded and ready to begin*/
 	private boolean blnJoinerReady = false;
+	/**Unique client player index bound specifically to the local interface*/
 	private int intLocalPlayerIndex = 0;
 	
 	//Methods
+	/** Responds to system actions and custom event triggers.
+		Filters incoming messages.
+		The associated event triggered by user interactions or components.
+	*/
 	public void actionPerformed(ActionEvent evt){
 		if(evt.getActionCommand() != null && evt.getActionCommand().equals("UNO_NETWORK_MESSAGE")){
 			String strMessage = network.getLastMessage();
@@ -23,6 +36,7 @@ public class UnoController implements ActionListener{
 		}
 	}
 	
+	/**Get the index of the player associated with local player.*/
 	public int getLocalPlayerIndex(){
 		return intLocalPlayerIndex;
 	}
@@ -41,6 +55,10 @@ public class UnoController implements ActionListener{
 	
 	*/
 	
+	/** Parse message received from network.
+		Process and print to the view, printing the message on the screen.
+		Connect message and graphics (chatbox)
+	*/
 	public void handleNetworkMessage(String strMessage){
 		System.out.println("Network Message: " + strMessage);
 		
@@ -62,6 +80,7 @@ public class UnoController implements ActionListener{
 		}
 	}
 	
+	/** Assemble the current card values, hand states, active discard, formatting them into setup messages sent directly across to connected player.*/
 	private void sendCurrentSetup(){
 		if(network != null){
 			String[] strDiscardTop = model.getTopDiscard();
@@ -74,6 +93,7 @@ public class UnoController implements ActionListener{
 		}
 	}
 	
+	/** Identify if game is successfully host with stable connection*/
 	public boolean hostGame(){
 		blnIsHost = true;
 		blnConnected = network.startServer(intDefaultPort);
