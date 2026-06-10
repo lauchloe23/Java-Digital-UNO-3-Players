@@ -742,10 +742,14 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			for(int i = 0; i < 3; i++){
 				intTurnOrder[i] = model.intTurnOrder[i];
 			}
-			// Copy player names from model so host sees joiners
+			// Copy player names from model so all players see correct names
 			for(int i = 0; i < 3; i++){
 				if(model.strPlayerNames[i] != null && !model.strPlayerNames[i].equals("")){
 					strPlayNames[i] = model.strPlayerNames[i];
+					// Sync local strName if this is the local player
+					if(i == intMyIndex && !strName.equals(model.strPlayerNames[i])){
+						strName = model.strPlayerNames[i];
+					}
 				}
 			}
 			intCurrentTurn = model.intCurrentTurn;
@@ -1068,10 +1072,11 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 
 		// If player now has UNO (1 card), announce
 		if(intHandSize == 1){
-			chatArea.append("[GAME MESSAGE] " + strName + " has reached UNO!\n");
+			String strActualName = (model != null && model.strPlayerNames != null && model.strPlayerNames.length > 0) ? model.strPlayerNames[(controller != null) ? controller.getLocalPlayerIndex() : 0] : strName;
+			chatArea.append("[GAME MESSAGE] " + strActualName + " has reached UNO!\n");
 			chatArea.setCaretPosition(chatArea.getDocument().getLength());
 			if(network != null){
-				network.sendReachedUno(strName);
+				network.sendReachedUno(strActualName);
 			}
 		}
 
@@ -1129,14 +1134,14 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 
 		if(strValue.equals("skip")){
 			advanceTurn();
-			String strSkipped = strPlayNames[intTurnOrder[intCurrentTurn]];
+			int intSkippedIdx = intTurnOrder[intCurrentTurn];
+			String strSkipped = (model != null && model.strPlayerNames != null && model.strPlayerNames.length > intSkippedIdx) ? model.strPlayerNames[intSkippedIdx] : strPlayNames[intSkippedIdx];
 			advanceTurn();
 			chatArea.append("[GAME MESSAGE] " + strSkipped + " is skipped!\n");
 			chatArea.setCaretPosition(chatArea.getDocument().getLength());
 			if(network != null){
 				String attacker = (model != null && model.strPlayerNames != null && model.strPlayerNames.length > 0) ? model.strPlayerNames[(controller != null) ? controller.getLocalPlayerIndex() : 0] : strName;
-				String target = (model != null && model.strPlayerNames != null && model.strPlayerNames.length > 0) ? model.strPlayerNames[intTurnOrder[intCurrentTurn]] : strSkipped;
-				network.sendPlayerAttack(attacker, "skip", target);
+				network.sendPlayerAttack(attacker, "skip", strSkipped);
 			}
 			if(model != null) model.intCurrentTurn = intCurrentTurn;
 			if(network != null){
@@ -1146,7 +1151,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		} else if(strValue.equals("draw2")){
 			advanceTurn();
 			int intTarget = intTurnOrder[intCurrentTurn];
-			String strTargetName = strPlayNames[intTarget];
+			String strTargetName = (model != null && model.strPlayerNames != null && model.strPlayerNames.length > intTarget) ? model.strPlayerNames[intTarget] : strPlayNames[intTarget];
 			if(model != null){
 				model.intHandSizes[intTarget] += 2;
 			} else {
@@ -1158,8 +1163,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			chatArea.setCaretPosition(chatArea.getDocument().getLength());
 			if(network != null){
 				String attacker = (model != null && model.strPlayerNames != null && model.strPlayerNames.length > 0) ? model.strPlayerNames[(controller != null) ? controller.getLocalPlayerIndex() : 0] : strName;
-				String target = (model != null && model.strPlayerNames != null && model.strPlayerNames.length > intTarget) ? model.strPlayerNames[intTarget] : strTargetName;
-				network.sendPlayerAttack(attacker, "draw2", target);
+				network.sendPlayerAttack(attacker, "draw2", strTargetName);
 			}
 			advanceTurn();
 			if(model != null) model.intCurrentTurn = intCurrentTurn;
@@ -1170,7 +1174,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		} else if(strValue.equals("wilddraw4")){
 			advanceTurn();
 			int intTarget = intTurnOrder[intCurrentTurn];
-			String strTargetName = strPlayNames[intTarget];
+			String strTargetName = (model != null && model.strPlayerNames != null && model.strPlayerNames.length > intTarget) ? model.strPlayerNames[intTarget] : strPlayNames[intTarget];
 			if(model != null){
 				model.intHandSizes[intTarget] += 4;
 			} else {
@@ -1182,8 +1186,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			chatArea.setCaretPosition(chatArea.getDocument().getLength());
 			if(network != null){
 				String attacker = (model != null && model.strPlayerNames != null && model.strPlayerNames.length > 0) ? model.strPlayerNames[(controller != null) ? controller.getLocalPlayerIndex() : 0] : strName;
-				String target = (model != null && model.strPlayerNames != null && model.strPlayerNames.length > intTarget) ? model.strPlayerNames[intTarget] : strTargetName;
-				network.sendPlayerAttack(attacker, "wilddraw4", target);
+				network.sendPlayerAttack(attacker, "wilddraw4", strTargetName);
 			}
 			advanceTurn();
 			if(model != null) model.intCurrentTurn = intCurrentTurn;
@@ -1313,7 +1316,11 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	 * x: The x-coordinate of the mouse click
 	 * y: The y-coordinate of the mouse click
 	 */
+	private boolean blnCardClickInProgress = false;  // Prevent double-play on fast clicks
+
 	private void handleCardClick(int intMouseX, int intMouseY){
+		if(blnCardClickInProgress) return;  // Ignore rapid clicks while processing
+		
 		int intCardW  = 260;
 		int intCardH  = 380;
 		int intGap    = 60;
@@ -1329,7 +1336,9 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				if(intCardIdx < intHandSize){
 					String cardName = strPlayHand[intCardIdx] != null ? strPlayHand[intCardIdx][0] : "(null)";
 					System.out.println("Clicked card: " + cardName);
+					blnCardClickInProgress = true;
 					playCard(intCardIdx);
+					blnCardClickInProgress = false;
 					repaint();
 					return;
 				}
@@ -2074,6 +2083,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	 */
 	public void showFlipFirst(){
 		resetScreens();
+		blnChat = false;  // Hide chat overlay on flip first screen
 		blnFlipFirst = true;
 		setComponentVisibility();
 	}
