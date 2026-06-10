@@ -1864,12 +1864,24 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		g2.setColor(Color.WHITE);
 		drawCenteredString(g2, "LEADERBOARD", 640, 210);
 		
-		String[] strPlayers = {"Player 1", "Player 2", "Player 3"};
+		// Build name list matching the ordering of intCardCount1/2/3
+		int intMyIndex = (controller != null) ? controller.getLocalPlayerIndex() : 0;
+		String[] lbNames = new String[3];
+		// First entry corresponds to the local player's slot (intCardCount1)
+		lbNames[0] = (model != null && model.strPlayerNames != null && model.strPlayerNames.length > intMyIndex)
+				? model.strPlayerNames[intMyIndex]
+				: strPlayNames[intMyIndex];
+		int lbIdx = 1;
+		for (int i = 0; i < 3; i++) {
+			if (i == intMyIndex) continue;
+			lbNames[lbIdx++] = strPlayNames[i];
+		}
+
 		int[] intCounts = {intCardCount1, intCardCount2, intCardCount3};
 		g2.setFont(subFont);
 		int intLengthY = 270;
-		
-		for(int intCount = 0; intCount < 3; intCount++){
+
+		for (int intCount = 0; intCount < 3; intCount++) {
 			// Red if near elimination limit
 			if(intCounts[intCount] >= intMaxCards - 3){
 				g2.setColor(unoRed);
@@ -1878,7 +1890,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			}else{
 				g2.setColor(Color.WHITE);
 			}
-			g2.drawString(strPlayNames[intCount], 450, intLengthY);
+			g2.drawString(lbNames[intCount], 450, intLengthY);
 			g2.drawString(intCounts[intCount] + " / " + intMaxCards, 730, intLengthY);
 			intLengthY += 60;
 		}
