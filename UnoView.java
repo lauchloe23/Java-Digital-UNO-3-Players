@@ -823,11 +823,6 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	
 	// draw from pile method
 	private void drawFromPile(){
-		int intMyIndex = (controller != null) ? controller.getLocalPlayerIndex() : 0;
-		if(intTurnOrder[intCurrentTurn] != intMyIndex){
-			return; // not your turn
-		}
-		
 		if(intDrawPileSize == 0){
 			reshuffleDiscard();
 		}
@@ -919,13 +914,6 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			return;
 		}
 		advanceTurn();
-		
-		if(model != null){
-			int intMyIndex = (controller != null) ? controller.getLocalPlayerIndex() : 0;
-			model.intHandSizes[intMyIndex] = intHandSize;
-		}
-
-				
 		if(network != null){
 			network.sendTurnUpdate(strCardName, strWildColor, model.intHandSizes);
 		}
@@ -999,12 +987,6 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	
 	// check if mouse click hit in the card page
 	private void handleCardClick(int intMouseX, int intMouseY){
-		int intMyIndex = (controller != null) ? controller.getLocalPlayerIndex() : 0;
-		if(intTurnOrder[intCurrentTurn] != intMyIndex){
-			return; // not your turn
-		}
-		
-		
 		int intCardW  = 260;
 		int intCardH  = 380;
 		int intGap    = 60;
@@ -1759,7 +1741,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 						}
 						*/
 						
-						if (model != null && !strCardPlayed.equals("") && !strCardPlayed.equals("")) {
+						if (model != null && !strCardPlayed.equals("") && !strCardPlayed.equals("wild")) {
 							for (int d = 0; d < model.intDeckSize; d++) {
 								if (model.strDeck[d][0].equals(strCardPlayed)) {
 									model.strDiscardPile[model.intDiscardPileSize] = model.strDeck[d];
