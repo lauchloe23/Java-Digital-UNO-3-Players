@@ -2250,7 +2250,8 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 								intDrawPileSize--;
 								intHandSize++;
 							}
-							intCardCount1 = intHandSize;
+							// Always use authoritative model hand size, even if draw pile was empty
+							intCardCount1 = model.intHandSizes[intMyIdx2];
 							
 							
 						}
