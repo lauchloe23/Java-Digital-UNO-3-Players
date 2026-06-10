@@ -126,7 +126,6 @@ public class SuperSocketMaster{
     if(soccon.openConnection()){
       return true;
     }else{
-      System.err.println("SuperSocketMaster: openConnection() returned false (port="+intPort+", serverIP="+strServerIP+")");
       soccon = null;
       return false;
     }
@@ -358,8 +357,6 @@ public class SuperSocketMaster{
         try {
           serverSocketObject = new ServerSocket(intPort); 
         } catch (IOException e) {
-          System.err.println("SuperSocketMaster: Failed to open server socket on port " + intPort + ": " + e.getMessage());
-          e.printStackTrace();
           return false;
         }
         Thread t1 = new Thread(this);
@@ -377,8 +374,6 @@ public class SuperSocketMaster{
           outBuffer = new PrintWriter(socketObject.getOutputStream(), true);
           inBuffer = new BufferedReader(new InputStreamReader(socketObject.getInputStream()));          
         } catch (IOException e) {
-          System.err.println("SuperSocketMaster: Failed to connect to server " + strServerIP + ":" + intPort + " -> " + e.getMessage());
-          e.printStackTrace();
           return false;
         }
         Thread t1 = new Thread(this);
