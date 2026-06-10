@@ -2339,15 +2339,14 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 							String[] strNames = strParts[6].split(",");
 							for(int i = 0; i < 3 && i < strNames.length; i++){
 								strPlayNames[i] = strNames[i];
+								if(model != null && model.strPlayerNames != null && i < model.strPlayerNames.length){
+									model.strPlayerNames[i] = strNames[i];
+								}
 							}
+							blnChat = false;
+							blnHelp = false;
+							blnLeaderBoard = false;
 						}
-						
-						// Hide chat and overlays when the game begins
-						blnChat = false;
-						blnHelp = false;
-						blnLeaderBoard = false;
-						
-						// sync view from model
 						startGame();
 					}
 				}

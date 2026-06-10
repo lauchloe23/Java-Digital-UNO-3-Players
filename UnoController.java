@@ -99,6 +99,9 @@ public class UnoController implements ActionListener{
 					try{
 						intLocalPlayerIndex = Integer.parseInt(strIdxParts[2].trim());
 						blnIndexAssigned = true;
+						if(model != null && intLocalPlayerIndex >= 0 && intLocalPlayerIndex < model.strPlayerNames.length){
+							model.strPlayerNames[intLocalPlayerIndex] = strLocalName;
+						}
 					}catch(NumberFormatException e){
 						intLocalPlayerIndex = 1;
 					}
@@ -201,13 +204,13 @@ public class UnoController implements ActionListener{
 			return false;
 		}
 		strLocalName = strPlayerName;
-		model.strPlayerNames[0] = strPlayerName;
 		
 		if(!blnIsHost){
-			// Joiner: load the deck so card lookups work when SETUP arrives
+			// Joiner: do not assume the host slot is our own name
+			// The host will send a full SETUP payload with all player names.
 			model.loadDeck();
 			if(network != null){
-				network.send("JOIN|" + strPlayerName); 
+				network.send("JOIN|" + strPlayerName);
 				network.sendJoin(strPlayerName);
 				network.send("READY|" + strPlayerName);
 			}
@@ -215,6 +218,7 @@ public class UnoController implements ActionListener{
 		}
 		
 		// Host: full game setup
+		model.strPlayerNames[0] = strPlayerName;
 		model.startGame();
 		blnGameStarted = true;
 		
