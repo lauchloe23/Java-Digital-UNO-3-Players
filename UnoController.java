@@ -5,6 +5,8 @@ import javax.swing.SwingUtilities;
  * The Controller class for the Uno game.
  * It manages the game flow, connects the data (Model) with the screen (View),
  * and handles network communication between players.
+ * Arthur: Chloe Lau and Sydney Khang
+ * Version: 1.0
  */
 public class UnoController implements ActionListener{
 	//Properties

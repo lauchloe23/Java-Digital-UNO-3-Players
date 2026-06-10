@@ -13,36 +13,61 @@ import java.util.Random;
 import java.util.Enumeration;
 import java.net.*;
 
+/**
+ * The View class for the Uno game.
+ * It builds the main graphical user interface (GUI) window using Java Swing,
+ * displays the player's cards, handles visual animations, and sets up the screen layout.
+ * It implements listeners to catch user interactions via mouse clicks, keyboard presses, and timers.
+ */
 public class UnoView extends JPanel implements ActionListener, MouseListener, KeyListener{
 	// Properties
+	/** The width of the game window in pixels (1280). */
 	final int intWidth = 1280;
+	/** The height of the game window in pixels (720). */
 	final int intHeight = 720;
+	/** The maximum number of cards a player can hold in their hand at once (30). */
 	final int intMaxCards = 30;
+	// final int intMaxCards = 30;
+	/** The number of cards dealt to each player at the start of a match (7). */
 	final int intStartCards = 7;
+	/** Grouping variable to track how many items display per page view. */
 	final int intPerPage = 2;
 
 	// JFrame 
+	/** The main operating system desktop window frame containing the Uno game display canvas. */
 	JFrame theFrame = new JFrame("UNO");
 	
 	// connect files
+	/** Reference to the controller logic layer that captures and routes player decisions. */
 	UnoController controller;
+	/** Reference to the data core model containing deck matrices and player turn variables. */
 	UnoModel model;
+	/** Reference to the backend network socket */
 	UnoNetwork network;
 	
 	// Deck & Cards Array 
 	// 100 cards in a deck
+	/** A master list storing details for all 100 cards included in a full standard deck. */
 	String[][] strDeck = new String[100][4];
+	/** Holds the current cards left in the face-down pile that players draw from. */
 	String[][] strDrawPile = new String[100][4];
+	/** Holds the cards that players have already played, stacked on top of each other face-up. */
 	String[][] strDiscardPile = new String[100][4];
+	/** Stores the actual cards currently held in the local player's visible hand. */
 	String[][] strPlayHand = new String[30][4];
 	
 	// Card Counts in each pile
+	/** Tracks exactly how many cards remain inside the original deck array. */
 	int intDeckSize = 0;
+	/** Tracks exactly how many cards remain available inside the draw pile. */
 	int intDrawPileSize = 0;
+	/** Tracks exactly how many cards inside the discard pile. */
 	int intDiscardPileSize = 0;
+	/** Tracks exactly how many cards the player holds. */
 	int intHandSize = 0;
 	
 	// current page of cards shown on your turn screen
+	/** Track the page of cards shown on the player's turn screen*/
 	int intCardPage = 0;
 	
 	// last card dran from pile (display card screen)
@@ -164,6 +189,14 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	JButton btnEliminatedOK = createGoldButton("CONTINUE WATCHING");
 	
 	// Action Listener
+	/**
+	 * Handles all button clicks and UI actions.
+	 * This method checks which button was pressed and performs
+	 * the correct action (e.g., starting the game, drawing a card,
+	 * sending chat messages, switching screens).
+	 *
+	 * e: The ActionEvent triggered by a user action
+	 */
 	public void actionPerformed(ActionEvent e){
 		if(e.getSource() == playButton){
 			fadeToScreen("theme");
@@ -448,6 +481,12 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	}
 
 	// Mouse Listener Method Overrides
+	/**
+	 * Detects when the mouse is clicked.
+	 * Used for switching screens and selecting cards during gameplay.
+	 *
+	 * e: The MouseEvent containing click information
+	 */
 	public void mouseClicked(MouseEvent e){
 		if(blnEnterScreen){
 			fadeToScreen("play");
@@ -465,12 +504,30 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		}
 	}
 	
+	/**
+	 * Not used, but required by MouseListener.
+	 */
 	public void mousePressed(MouseEvent e){}
+	/**
+	 * Not used, but required by MouseListener.
+	 */
 	public void mouseReleased(MouseEvent e){}
+	/**
+	 * Not used, but required by MouseListener.
+	 */
 	public void mouseEntered(MouseEvent e){}
+	/**
+	 * Not used, but required by MouseListener.
+	 */
 	public void mouseExited(MouseEvent e){}
 	
 	// Key Listener Method Overrides
+	/**
+	 * Detects when a key is pressed.
+	 * Used for actions like opening the chat or moving between screens.
+	 *
+	 * e: Yhe KeyEvent containing key press information
+	 */
 	public void keyPressed(KeyEvent e){
 		if(blnEnterScreen){
 			fadeToScreen("play");
@@ -491,10 +548,22 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		}
 	}
 	
+	/**
+	 * Not used, but required by KeyListener.
+	 */
 	public void keyTyped(KeyEvent e){}
+	/**
+	 * Not used, but required by KeyListener.
+	 */
 	public void keyReleased(KeyEvent e){}
 	
 	// load card images
+	/**
+	 * Loads all card images into memory before the game starts.
+	 * This improves performance by preventing delays when cards are displayed.
+	 *
+	 * It selects images based on the current theme.
+	 */
 	private void preloadCardImages(){
 		String strCardPath = "Image/Cards/";
 		for(int i = 0; i < intDeckSize; i++){
@@ -515,6 +584,14 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	}
 	
 	// draw string in center
+	/**
+	 * Draws a string centered horizontally at a given position.
+	 *
+	 * g2: The Graphics2D object used for drawing
+	 * strMessage: The text to display
+	 * intCenterX: The horizontal center position
+	 * intY: The vertical position
+	 */
 	private void drawCenteredString(Graphics2D g2, String strMessage, int intCenterX, int intY){
 		FontMetrics metrics = g2.getFontMetrics();
 		int intX = intCenterX - metrics.stringWidth(strMessage)/2;
@@ -522,6 +599,12 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	}
 	
 	// draw gold button method
+	/**
+	 * Creates a styled button with a gold theme used in the game UI.
+	 *
+	 * strText: The text displayed on the button
+	 * return A JButton with custom styling applied
+	 */
 	private JButton createGoldButton(String strText){
 		JButton button = new JButton(strText);
 		button.setFont(buttonFont);
@@ -661,6 +744,10 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	}
 	
 	// Game paint element logic method (when name, theme enters -> it starts)
+	/**
+	 * Initializes the game after setup is complete.
+	 * Deals cards, prepares the board, and switches to gameplay.
+	 */
 	private void startGame(){
 		if(model != null){
 			// Pull all game state from the model
@@ -857,6 +944,10 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	}
 	
 	// draw from pile method
+	/**
+	 * Allows the player to draw a card from the draw pile.
+	 * Updates the player's hand and game state.
+	 */
 	private void drawFromPile(){
 		if(intDrawPileSize == 0){
 			reshuffleDiscard();
@@ -943,12 +1034,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		                           .replace("blue","").replace("red","");
 		return strVal.equals("") ? "wild" : strVal;
 	}
- 
-	
-	
-	
-	
-	
+ 	
 	// player's card
 	private void playCard(int intIndex){
 		if(intIndex < 0 || intIndex >= intHandSize){
@@ -1014,6 +1100,10 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	}
 	
 	// move to next player
+	/**
+	 * Moves the game to the next player's turn.
+	 * Updates turn order and checks game conditions.
+	 */
 	private void advanceTurn(){
 		int intCount = 0;
 		boolean searchingForActivePlayer = true;
@@ -1080,6 +1170,13 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	}
 	
 	// check if mouse click hit in the card page
+	/**
+	 * Handles when a player clicks on a card.
+	 * Determines which card was selected and plays it if valid.
+	 *
+	 * x: The x-coordinate of the mouse click
+	 * y: The y-coordinate of the mouse click
+	 */
 	private void handleCardClick(int intMouseX, int intMouseY){
 		int intCardW  = 260;
 		int intCardH  = 380;
@@ -1102,6 +1199,12 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	}
 	
 	// transition method
+	/**
+	 * Starts a fade animation to switch from the current screen
+	 * to another screen.
+	 *
+	 * strScreen: The name of the screen to switch to
+	 */
 	private void fadeToScreen(String strTarget){
 		strNextScreen = strTarget;
 		blnFading = true;
@@ -1161,6 +1264,13 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	}
 	
 	// Paint Component Method
+	/**
+	 * Draws all graphics for the current screen.
+	 * This method is automatically called when the UI needs to be refreshed.
+	 * It displays things like cards, backgrounds, and text.
+	 *
+	 * g: The Graphics object used for drawing
+	 */
 	 public void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
@@ -1664,6 +1774,10 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	}
 	
 	// Display of JButton
+	/**
+	 * Updates which UI components are visible based on the current screen.
+	 * Helps control what the player sees at different stages of the game.
+	 */
 	private void setComponentVisibility(){
 		boolean blnGameplayScreen = blnTurnScreen || blnWaitScreen || blnDisplayCard || blnPickCard;
 		playButton.setVisible(blnPlayScreen);
@@ -1720,42 +1834,72 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	}
 	
 	// Translate Screen
+	/**
+	 * Shows the main gameplay screen.
+	 * Players can see their cards and take turns here.
+	 */
 	public void showPlayScreen(){
 		resetScreens();
 		blnPlayScreen = true;
 		setComponentVisibility();
 	}
 	
+	/**
+	 * Shows the theme selection screen.
+	 * Allows the player to choose a visual theme for the game.
+	 */
 	public void showThemeScreen(){
 		resetScreens();
 		blnThemeScreen = true;
 		setComponentVisibility();
 	}
 	
+	/**
+	 * Shows the waiting screen.
+	 * This is used while waiting for other players in multiplayer.
+	 */
 	public void showWaitScreen(){
 		resetScreens();
 		blnWaitScreen = true;
 		setComponentVisibility();
 	}
 	
+	/**
+	 * Shows the screen where a player must pick a card.
+	 * This can happen when no valid moves are available.
+	 */
 	public void showPickCard(){
 		resetScreens();
 		blnPickCard = true;
 		setComponentVisibility();
 	}
 	
+	/**
+	 * Shows the display card screen.
+	 * This screen shows the top card currently in play.
+	 */
 	public void showDisplayCard(){
 		resetScreens();
 		blnDisplayCard = true;
 		setComponentVisibility();
 	}
 	
+	/**
+	 * Shows the turn screen.
+	 * Displays whose turn it is before gameplay continues.
+	 */
 	public void showTurnScreen(){
 		resetScreens();
 		blnTurnScreen = true;
 		setComponentVisibility();
 	}
 	
+	/**
+	 * Shows the game over screen.
+	 * Displays the winner of the game.
+	 *
+	 * strWinner: The name of the winning player
+	 */
 	public void showGameOver(String strWinner){
 		this.strWinner = strWinner;
 		resetScreens();
@@ -1763,30 +1907,62 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		setComponentVisibility();
 	}
 	
+	/**
+	 * Shows the screen where the first card is flipped.
+	 * This usually happens at the start of the game.
+	 */
 	public void showFlipFirst(){
 		resetScreens();
 		blnFlipFirst = true;
 		setComponentVisibility();
 	}
 	
+	/**
+	 * Shows the eliminated screen.
+	 * This screen appears when a player is out of the game.
+	 */
 	public void showEliminated(){
 		// overlay on top of current screen
 		blnEliminated = true;
 		setComponentVisibility();
 	}
 	
+	/**
+	 * Connects this view to the controller.
+	 * The controller handles game logic and user actions.
+	 *
+	 * controller: The UnoController used to manage game logic
+	 */
 	public void setController(UnoController controller){
 		this.controller = controller;
 	}
 	
+	/**
+	 * Connects this view to the model.
+	 * The model stores all game data such as players, cards, and scores.
+	 *
+	 * model: The UnoModel containing the game data
+	 */
 	public void setModel(UnoModel model){
 		this.model = model;
 	}
 	
+	/**
+	 * Connects this view to the network system.
+	 * Used for sending and receiving multiplayer data.
+	 *
+	 * network: The UnoNetwork used for communication
+	 */
 	public void setNetwork(UnoNetwork network){
 		this.network = network;
 	}
 	
+	/**
+	 * Handles messages received from the network (multiplayer).
+	 * It reads the message and updates the game state or UI accordingly.
+	 *
+	 * strMessage: The message received from another player or server
+	 */
 	public void processNetworkMessage(String strMessage){
 		SwingUtilities.invokeLater(new Runnable(){
 			public void run(){
@@ -1937,6 +2113,12 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	}
 
 	//added
+	/**
+	 * Gets the local IP address of the current device.
+	 * Used when hosting a multiplayer game.
+	 *
+	 * return The local IP address as a string
+	 */
 	private String getLocalIPAddress(){
 		try{
 			java.util.Enumeration<java.net.NetworkInterface> interfaces = 
@@ -2040,6 +2222,9 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	}
 	*/
 
+	/**
+	 * Default public constructor initializing of UnoView
+	*/
 	// Constructor
 	public UnoView(){
 		// Panel Setup

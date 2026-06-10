@@ -13,36 +13,61 @@ import java.util.Random;
 import java.util.Enumeration;
 import java.net.*;
 
+/**
+ * The View class for the Uno game.
+ * It builds the main graphical user interface (GUI) window using Java Swing,
+ * displays the player's cards, handles visual animations, and sets up the screen layout.
+ * It implements listeners to catch user interactions via mouse clicks, keyboard presses, and timers.
+ */
 public class UnoView extends JPanel implements ActionListener, MouseListener, KeyListener{
 	// Properties
+	/** The width of the game window in pixels (1280). */
 	final int intWidth = 1280;
+	/** The height of the game window in pixels (720). */
 	final int intHeight = 720;
+	/** The maximum number of cards a player can hold in their hand at once (30). */
 	final int intMaxCards = 30;
+	// final int intMaxCards = 30;
+	/** The number of cards dealt to each player at the start of a match (7). */
 	final int intStartCards = 7;
+	/** Grouping variable to track how many items display per page view. */
 	final int intPerPage = 2;
 
 	// JFrame 
+	/** The main operating system desktop window frame containing the Uno game display canvas. */
 	JFrame theFrame = new JFrame("UNO");
 	
 	// connect files
+	/** Reference to the controller logic layer that captures and routes player decisions. */
 	UnoController controller;
+	/** Reference to the data core model containing deck matrices and player turn variables. */
 	UnoModel model;
+	/** Reference to the backend network socket */
 	UnoNetwork network;
 	
 	// Deck & Cards Array 
 	// 100 cards in a deck
+	/** A master list storing details for all 100 cards included in a full standard deck. */
 	String[][] strDeck = new String[100][4];
+	/** Holds the current cards left in the face-down pile that players draw from. */
 	String[][] strDrawPile = new String[100][4];
+	/** Holds the cards that players have already played, stacked on top of each other face-up. */
 	String[][] strDiscardPile = new String[100][4];
+	/** Stores the actual cards currently held in the local player's visible hand. */
 	String[][] strPlayHand = new String[30][4];
 	
 	// Card Counts in each pile
+	/** Tracks exactly how many cards remain inside the original deck array. */
 	int intDeckSize = 0;
+	/** Tracks exactly how many cards remain available inside the draw pile. */
 	int intDrawPileSize = 0;
+	/** Tracks exactly how many cards inside the discard pile. */
 	int intDiscardPileSize = 0;
+	/** Tracks exactly how many cards the player holds. */
 	int intHandSize = 0;
 	
 	// current page of cards shown on your turn screen
+	/** Track the page of cards shown on the player's turn screen*/
 	int intCardPage = 0;
 	
 	// last card dran from pile (display card screen)
@@ -354,7 +379,11 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 								chatArea.append("[GAME MESSAGE] Tell your partner to enter that IP and click JOIN GAME (port 5555)\n");
 								ipField.setText(strHostIP);
 							}else{
-								chatArea.append("[GAME MESSAGE] Could not host game. Port may already be in use.\n");
+								chatArea.append("[GAME MESSAGE] Could not host game on port 5555.\n");
+								chatArea.append("[GAME MESSAGE] On Windows, allow Java through Windows Defender Firewall (Private networks),\n");
+								chatArea.append("[GAME MESSAGE] or run once as Administrator. Also confirm both PCs are on the same network.\n");
+								
+								//chatArea.append("[GAME MESSAGE] Could not host game. Port may already be in use.\n");
 								blnNetworkReady = false;
 								btnHost.setEnabled(true);
 								btnJoin.setEnabled(true);
@@ -1913,6 +1942,14 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 								model.strDiscardPile[0] = model.strDeck[d];
 								model.intDiscardPileSize = 1;
 								break;
+							}
+						}
+						
+						
+						if(strParts.length >= 7){
+							String[] strNames = strParts[6].split(",");
+							for(int i = 0; i < 3 && i < strNames.length; i++){
+								strPlayNames[i] = strNames[i];
 							}
 						}
 						
