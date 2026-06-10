@@ -152,7 +152,9 @@ public class UnoController implements ActionListener{
 		
 		if(network != null){
 			network.sendJoin(strPlayerName);
-			sendCurrentSetup();
+			if(blnJoinerReady){
+				sendCurrentSetup();
+			}
 		}
 		
 		return true;
