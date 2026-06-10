@@ -58,10 +58,10 @@ public class UnoNetwork implements ActionListener{
 	 * strWildColor: chosen wild color (if any)
 	 * intHandSize: amount of cards remain in everyone's hand
 	*/
-	public void sendTurnUpdate(String strCardPlayed, String strWildColor, int[] intHandSizes){
+	public void sendTurnUpdate(String strCardPlayed, String strWildColor, int[] intHandSizes, int intNextTurn){
 		if(ssm != null){
 			String strSizes = intHandSizes[0] + "," + intHandSizes[1] + "," + intHandSizes[2];
-			ssm.sendText("TURN|" + strCardPlayed + "|" + strWildColor + "|" + strSizes);
+			ssm.sendText("TURN|" + strCardPlayed + "|" + strWildColor + "|" + strSizes  + "|" + intNextTurn);
 		}
 	}
 	

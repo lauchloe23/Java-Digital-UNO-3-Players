@@ -120,6 +120,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	boolean blnEliminated = false; // local player eliminated
 	boolean blnWildPicker = false;
 	boolean blnNetworkReady = false;
+	boolean blnSetupReceived = false;
 	
 	// elimination tracking
 	boolean[] blnPlayerEliminated = {false, false, false};
@@ -817,6 +818,8 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		strWildColor = "";
 		blnEliminated = false;
 		blnWildPicker = false;
+		blnSetupReceived = false;
+
 		// blnNetworkReady = false;
 		preloadCardImages(); // reload images with updated deck + theme
 		fadeToScreen("flipfirst");
@@ -1095,7 +1098,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				
 		advanceTurn();
 		if(network != null){
-			network.sendTurnUpdate(strCardName, strWildColor, model.intHandSizes);
+			network.sendTurnUpdate(strCardName, strWildColor, model.intHandSizes, model.intCurrentTurn);
 		}
 	}
 	
@@ -2049,6 +2052,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 										
 						String strValue = strCardPlayed.replace("yellow","").replace("green","")
 														.replace("blue","").replace("red","");
+														
 						boolean blnIsSkip = strValue.equals("skip")
 										 || strValue.equals("draw2")
 										 || strValue.equals("wilddraw4");
@@ -2059,6 +2063,10 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 					}
 				}else if(strMessage.startsWith("SETUP|")){
 					// Parse the host's dealt hands
+					if(blnSetupReceived){
+						return;
+					}
+					blnSetupReceived = true;
 					String[] strParts = strMessage.split("\\|");			
 					if(strParts.length >= 6){
 						// Load each player's hand into the model
