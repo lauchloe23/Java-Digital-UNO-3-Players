@@ -233,7 +233,15 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		}else if(e.getSource() == btnPickUp){
 			drawFromPile();
 		}else if(e.getSource() == btnContinue){
-			fadeToScreen("turn");
+			if(model != null){
+				int intMyIdx = (controller != null) ? controller.getLocalPlayerIndex() : 0;
+				model.intHandSizes[intMyIdx] = intHandSize;
+			}
+			if(network != null && model != null){
+				network.sendTurnUpdate("draw", "", model.intHandSizes);
+			}
+			
+			//fadeToScreen("turn");
 		}else if(e.getSource() == btnPrev){
 			if(intCardPage > 0){
 				intCardPage--;
@@ -242,6 +250,12 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			strWildColor = "red";
 			blnWildPicker = false;
 			setComponentVisibility();
+			
+			if(model != null){
+				int intMyIdx = (controller != null) ? controller.getLocalPlayerIndex() : 0;
+				model.intHandSizes[intMyIdx] = intHandSize;
+			}
+			
 			advanceTurn();
 			if(network != null){
 				network.sendTurnUpdate("wild", "red", model.intHandSizes);
@@ -250,6 +264,11 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			strWildColor = "blue";
 			blnWildPicker = false;
 			setComponentVisibility();
+			
+			if(model != null){
+				int intMyIdx = (controller != null) ? controller.getLocalPlayerIndex() : 0;
+				model.intHandSizes[intMyIdx] = intHandSize;
+			}
 			advanceTurn();
 			if(network != null){
 				network.sendTurnUpdate("wild", "blue", model.intHandSizes);
@@ -258,6 +277,11 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			strWildColor = "green";
 			blnWildPicker = false;
 			setComponentVisibility();
+			
+			if(model != null){
+				int intMyIdx = (controller != null) ? controller.getLocalPlayerIndex() : 0;
+				model.intHandSizes[intMyIdx] = intHandSize;
+			}
 			advanceTurn();
 			if(network != null){
 				network.sendTurnUpdate("wild", "green", model.intHandSizes);
@@ -266,6 +290,11 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			strWildColor = "yellow";
 			blnWildPicker = false;
 			setComponentVisibility();
+			
+			if(model != null){
+				int intMyIdx = (controller != null) ? controller.getLocalPlayerIndex() : 0;
+				model.intHandSizes[intMyIdx] = intHandSize;
+			}
 			advanceTurn();
 			if(network != null){
 				network.sendTurnUpdate("wild", "yellow", model.intHandSizes);
@@ -823,11 +852,6 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	
 	// draw from pile method
 	private void drawFromPile(){
-		int intMyIndex = (controller != null) ? controller.getLocalPlayerIndex() : 0;
-		if(intTurnOrder[intCurrentTurn] != intMyIndex){
-			return; // not your turn
-		}
-		
 		if(intDrawPileSize == 0){
 			reshuffleDiscard();
 		}
@@ -874,6 +898,51 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		System.out.println("Draw pile reshuffled.");
 	}
 	
+	
+		// --- FIX 1 helper: check if a card name is a legal play against the view's discard pile ---
+	private boolean isValidPlay(String strCardName){
+		// Wild cards are always valid
+		if(strCardName.startsWith("wild")){
+			return true;
+		}
+		// If discard pile is empty anything goes
+		if(intDiscardPileSize == 0){
+			return true;
+		}
+		String strTopCard = strDiscardPile[intDiscardPileSize - 1][0];
+		// If top card is a wild and a colour was chosen, must match that colour
+		if(strTopCard.startsWith("wild")){
+			if(!strWildColor.equals("")){
+				return getCardColor(strCardName).equals(strWildColor);
+			}
+			return true;
+		}
+		// Otherwise match by colour OR by value
+		return getCardColor(strCardName).equals(getCardColor(strTopCard))
+			|| getCardValue(strCardName).equals(getCardValue(strTopCard));
+	}
+ 
+	// helper: extract colour prefix from card name
+	private String getCardColor(String strCardName){
+		if(strCardName.startsWith("red"))    return "red";
+		if(strCardName.startsWith("blue"))   return "blue";
+		if(strCardName.startsWith("green"))  return "green";
+		if(strCardName.startsWith("yellow")) return "yellow";
+		return "wild";
+	}
+ 
+	// helper: extract value suffix from card name
+	private String getCardValue(String strCardName){
+		String strVal = strCardName.replace("yellow","").replace("green","")
+		                           .replace("blue","").replace("red","");
+		return strVal.equals("") ? "wild" : strVal;
+	}
+ 
+	
+	
+	
+	
+	
 	// player's card
 	private void playCard(int intIndex){
 		if(intIndex < 0 || intIndex >= intHandSize){
@@ -882,6 +951,13 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		String[] strCard = strPlayHand[intIndex];
 		String strCardName = strCard[0];
 
+		if(!isValidPlay(strCardName)){
+			// Flash a message or just silently ignore the illegal play
+			repaint();
+			return;
+		}
+		
+		
 		// Move card to discard pile
 		strDiscardPile[intDiscardPileSize] = strPlayHand[intIndex];
 		intDiscardPileSize++;
@@ -918,14 +994,14 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			repaint();
 			return;
 		}
-		advanceTurn();
 		
+		// NEW — before sendTurnUpdate in playCard() and each wild button:
 		if(model != null){
-			int intMyIndex = (controller != null) ? controller.getLocalPlayerIndex() : 0;
-			model.intHandSizes[intMyIndex] = intHandSize;
+			int intMyIdx = (controller != null) ? controller.getLocalPlayerIndex() : 0;
+			model.intHandSizes[intMyIdx] = intHandSize;
 		}
-
 				
+		advanceTurn();
 		if(network != null){
 			network.sendTurnUpdate(strCardName, strWildColor, model.intHandSizes);
 		}
@@ -999,12 +1075,6 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	
 	// check if mouse click hit in the card page
 	private void handleCardClick(int intMouseX, int intMouseY){
-		int intMyIndex = (controller != null) ? controller.getLocalPlayerIndex() : 0;
-		if(intTurnOrder[intCurrentTurn] != intMyIndex){
-			return; // not your turn
-		}
-		
-		
 		int intCardW  = 260;
 		int intCardH  = 380;
 		int intGap    = 60;
@@ -1739,6 +1809,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 					if(blnWaitScreen){
 						String[] strTurnParts = strMessage.split("\\|");
 						String strCardPlayed = strTurnParts.length >= 2 ? strTurnParts[1] : "";
+						// Capture chosen wild colour if present
 						if(strTurnParts.length >= 3 && !strTurnParts[2].equals("")){
 							strWildColor = strTurnParts[2];
 						}
@@ -1759,7 +1830,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 						}
 						*/
 						
-						if (model != null && !strCardPlayed.equals("") && !strCardPlayed.equals("")) {
+						if (model != null && !strCardPlayed.equals("") && !strCardPlayed.equals("draw")) {
 							for (int d = 0; d < model.intDeckSize; d++) {
 								if (model.strDeck[d][0].equals(strCardPlayed)) {
 									model.strDiscardPile[model.intDiscardPileSize] = model.strDeck[d];
