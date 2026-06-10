@@ -1,6 +1,11 @@
 import java.awt.event.*;
 import javax.swing.SwingUtilities;
 
+/**
+ * The Controller class for the Uno game.
+ * It manages the game flow, connects the data (Model) with the screen (View),
+ * and handles network communication between players.
+ */
 public class UnoController implements ActionListener{
 	//Properties
 	/** Reference to the data of the state (model)*/
@@ -100,6 +105,10 @@ public class UnoController implements ActionListener{
 		return blnConnected;
 	}
 	
+	/** Connects this computer to a hosted game server using the host's IP address.
+	 * strIP: The network IP address of the host computer.
+	 * return True if the connection was successful; false otherwise.
+	 */
 	public boolean joinGame(String strIP){
 		blnIsHost = false;
 		intLocalPlayerIndex = 1; 
@@ -107,6 +116,10 @@ public class UnoController implements ActionListener{
 		return blnConnected;
 	}
 	
+	/** Sends a chat message typed by the local player out to the network.
+	 * strPlayerName: The name of the player sending the chat.
+	 * strMessage: The text message content to send.
+	 */
 	public void sendChat(String strPlayerName, String strMessage){
 		if(network != null){
 			network.sendPlayerChat(strPlayerName, strMessage);
@@ -129,6 +142,14 @@ public class UnoController implements ActionListener{
 		}
 	}
 	*/
+	
+	/** Starts the Uno match. 
+	 * If the player is a guest (Joiner), it pre-loads the card deck image data and tells the host it is ready.
+	 * If the player is the Host, it shuffles and deals the deck, sets up the starting game state, and 
+	 * transmits this layout data directly to the guest if they are ready.
+	 * strPlayerName: The name chosen by the player on this computer.
+	 * return True if the game successfully started as a host; false if you are the guest or not connected.
+	 */
 	public boolean startGame(String strPlayerName){
 		if(!blnConnected){
 			return false;
@@ -160,12 +181,17 @@ public class UnoController implements ActionListener{
 		return true;
 	}
 		
-	
+	/** Checks if this computer application is acting as the game host server.
+	 * return True if hosting; false if joining a host.
+	 */
 	public boolean isHost(){
 		return blnIsHost;
 	}
 	
 	//Controller
+	/** Constructor. Initializes the game data (Model), screen interface (View), and 
+	 * the network helper. It links them together so they can interact seamlessly.
+	 */
 	public UnoController(){
 		model = new UnoModel();
 		view = new UnoView();
@@ -177,7 +203,9 @@ public class UnoController implements ActionListener{
 		view.setNetwork(network);
 		
 	}
-	
+	/** The main entry point of the application. 
+	 * Starts the entire Uno program.
+	 */
 	public static void main(String[] args){
 		new UnoController();
 	}
