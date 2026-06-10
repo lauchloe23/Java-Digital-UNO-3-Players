@@ -524,8 +524,11 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			}else{
 				fadeToScreen("wait");
 			}
-		}else if(blnTurnScreen && !blnHelp && !blnLeaderBoard && !blnWildPicker && !blnChat){
-			handleCardClick(e.getX(), e.getY());
+		}else if(blnTurnScreen && !blnHelp && !blnLeaderBoard && !blnWildPicker){
+			// Allow clicking cards even if chat overlay is visible, unless the chat input is focused
+			if(!(blnChat && chatInput.isFocusOwner())){
+				handleCardClick(e.getX(), e.getY());
+			}
 		}
 	}
 	
@@ -795,6 +798,12 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			// Copy turn order
 			for(int i = 0; i < 3; i++){
 				intTurnOrder[i] = model.intTurnOrder[i];
+			}
+			// Copy player names from model so host sees joiners
+			for(int i = 0; i < 3; i++){
+				if(model.strPlayerNames[i] != null && !model.strPlayerNames[i].equals("")){
+					strPlayNames[i] = model.strPlayerNames[i];
+				}
 			}
 			intCurrentTurn = model.intCurrentTurn;
 			blnClockwise = model.blnClockwise;
@@ -1083,6 +1092,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
  	
 	// player's card
 	private void playCard(int intIndex){
+		System.out.println("Attempting to play card index: " + intIndex + " handSize=" + intHandSize);
 		if(intIndex < 0 || intIndex >= intHandSize){
 			return;
 		}
@@ -1322,7 +1332,10 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			int intCardIdx = intCardPage * intPerPage + intSlot;
 			int intX = intStartX + intSlot * (intCardW + intGap);
 			if(intMouseX >= intX && intMouseX <= intX + intCardW && intMouseY >= intCardY && intMouseY <= intCardY + intCardH){
+				System.out.println("Card click at ("+intMouseX+","+intMouseY+") -> idx="+intCardIdx+" handSize="+intHandSize);
 				if(intCardIdx < intHandSize){
+					String cardName = strPlayHand[intCardIdx] != null ? strPlayHand[intCardIdx][0] : "(null)";
+					System.out.println("Clicked card: " + cardName);
 					playCard(intCardIdx);
 					repaint();
 					return;
