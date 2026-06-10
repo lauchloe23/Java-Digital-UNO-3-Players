@@ -295,70 +295,13 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				intCardPage--;
 			}
 		}else if(e.getSource() == btnWildRed){
-			strWildColor = "red";
-			blnWildPicker = false;
-			setComponentVisibility();
-			
-			if(model != null){
-				int intMyIdx = (controller != null) ? controller.getLocalPlayerIndex() : 0;
-				model.intHandSizes[intMyIdx] = intHandSize;
-			}
-			
-			advanceTurn();
-			chatArea.append("[GAME MESSAGE] " + strName + " changed colour to RED\n");
-			chatArea.setCaretPosition(chatArea.getDocument().getLength());
-			if(network != null){
-				network.sendTurnUpdate("wild", "red", model.intHandSizes,model.intCurrentTurn);
-				network.sendColourChange(strName, "red");
-			}
+			completeWildSelection("red");
 		}else if(e.getSource() == btnWildBlue){
-			strWildColor = "blue";
-			blnWildPicker = false;
-			setComponentVisibility();
-			
-			if(model != null){
-				int intMyIdx = (controller != null) ? controller.getLocalPlayerIndex() : 0;
-				model.intHandSizes[intMyIdx] = intHandSize;
-			}
-			advanceTurn();
-			chatArea.append("[GAME MESSAGE] " + strName + " changed colour to BLUE\n");
-			chatArea.setCaretPosition(chatArea.getDocument().getLength());
-			if(network != null){
-				network.sendTurnUpdate("wild", "blue", model.intHandSizes,model.intCurrentTurn);
-				network.sendColourChange(strName, "blue");
-			}
+			completeWildSelection("blue");
 		}else if(e.getSource() == btnWildGreen){
-			strWildColor = "green";
-			blnWildPicker = false;
-			setComponentVisibility();
-			
-			if(model != null){
-				int intMyIdx = (controller != null) ? controller.getLocalPlayerIndex() : 0;
-				model.intHandSizes[intMyIdx] = intHandSize;
-			}
-			advanceTurn();
-			chatArea.append("[GAME MESSAGE] " + strName + " changed colour to GREEN\n");
-			chatArea.setCaretPosition(chatArea.getDocument().getLength());
-			if(network != null){
-				network.sendTurnUpdate("wild", "green", model.intHandSizes,model.intCurrentTurn);
-				network.sendColourChange(strName, "green");
-			}
+			completeWildSelection("green");
 		}else if(e.getSource() == btnWildYellow){
-			strWildColor = "yellow";
-			blnWildPicker = false;
-			setComponentVisibility();
-			
-			if(model != null){
-				int intMyIdx = (controller != null) ? controller.getLocalPlayerIndex() : 0;
-				model.intHandSizes[intMyIdx] = intHandSize;
-			}
-			advanceTurn();
-			chatArea.append("[GAME MESSAGE] " + strName + " changed colour to YELLOW\n");
-			chatArea.setCaretPosition(chatArea.getDocument().getLength());
-			if(network != null){
-				network.sendTurnUpdate("wild", "yellow", model.intHandSizes,model.intCurrentTurn);
-				network.sendColourChange(strName, "yellow");
-			}
+			completeWildSelection("yellow");
 		}else if(e.getSource() == btnEliminatedOK){
 			blnEliminated = false;
 			blnPlayerEliminated[0] = true;
@@ -1253,7 +1196,49 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			network.sendTurnUpdate(strCardName, "", model.intHandSizes, model.intCurrentTurn);
 		}
 	}
-	
+
+	private void completeWildSelection(String strColor){
+		strWildColor = strColor;
+		blnWildPicker = false;
+		setComponentVisibility();
+
+		if(model != null){
+			int intMyIdx = (controller != null) ? controller.getLocalPlayerIndex() : 0;
+			model.intHandSizes[intMyIdx] = intHandSize;
+		}
+
+		String strCardName = (intDiscardPileSize > 0) ? strDiscardPile[intDiscardPileSize - 1][0] : "wild";
+		boolean blnDraw4 = strCardName.equals("wilddraw4");
+
+		if(blnDraw4){
+			advanceTurn();
+			int intTarget = intTurnOrder[intCurrentTurn];
+			String strTargetName = strPlayNames[intTarget];
+			if(model != null){
+				model.intHandSizes[intTarget] += 4;
+			} else {
+				if(intTarget == 0) intCardCount1 += 4;
+				else if(intTarget == 1) intCardCount2 += 4;
+				else if(intTarget == 2) intCardCount3 += 4;
+			}
+			chatArea.append("[GAME MESSAGE] " + strTargetName + " draws 4 cards and is skipped!\n");
+			chatArea.setCaretPosition(chatArea.getDocument().getLength());
+			if(network != null){
+				network.sendPlayerAttack(strName, "wilddraw4", strTargetName);
+			}
+			advanceTurn();
+		} else {
+			advanceTurn();
+		}
+
+		chatArea.append("[GAME MESSAGE] " + strName + " changed colour to " + strColor.toUpperCase() + "\n");
+		chatArea.setCaretPosition(chatArea.getDocument().getLength());
+		if(network != null){
+			network.sendTurnUpdate(strCardName, strColor, model.intHandSizes, model.intCurrentTurn);
+			network.sendColourChange(strName, strColor);
+		}
+	}
+
 	// move to next player
 	/**
 	 * Moves the game to the next player's turn.
