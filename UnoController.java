@@ -56,20 +56,6 @@ public class UnoController implements ActionListener{
 	public int getLocalPlayerIndex(){
 		return intLocalPlayerIndex;
 	}
-	/*
-	public void handleNetworkMessage(String strMessage){
-		System.out.println("Network Message: " + strMessage);
-		
-		if(view != null){
-			SwingUtilities.invokeLater(new Runnable(){
-				public void run(){
-					view.processNetworkMessage(strMessage);
-				}
-			});
-		}
-	}
-	
-	*/
 	
 	/** Parse message received from network.
 		Process and print to the view, printing the message on the screen.
@@ -87,7 +73,7 @@ public class UnoController implements ActionListener{
 				if(intAssigned > 2) intAssigned = 2; // safety: only 3 seats
 				model.strPlayerNames[intAssigned] = strJoinName; // for Bug 1 name sync
 				network.send("INDEX|" + strJoinName + "|" + intAssigned);
-				//network.send("INDEX|" + intAssigned);
+				
 			}
 		}
 
@@ -174,23 +160,7 @@ public class UnoController implements ActionListener{
 			network.sendPlayerChat(strPlayerName, strMessage);
 		}
 	}
-	/*
-	public void startGame(String strPlayerName){
-		model.strPlayerNames[0] = strPlayerName;
-		model.startGame();
-		
-		if(network != null){
-			network.sendJoin(strPlayerName);
-			if(blnIsHost){
-				String[] strDiscardTop = model.getTopDiscard();
-				if(strDiscardTop == null){
-					strDiscardTop = new String[]{"", "", "", ""};
-				}
-				network.sendGameSetup(model.strHands, model.intHandSizes, model.intTurnOrder, strDiscardTop);
-			}
-		}
-	}
-	*/
+	
 	
 	/** Starts the Uno match. 
 	 * If the player is a guest (Joiner), it pre-loads the card deck image data and tells the host it is ready.

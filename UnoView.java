@@ -228,21 +228,6 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 					strName = strTyped;
 					strPlayNames[0] = strName;
 					
-					/*
-					if(controller != null && controller.isHost()){
-						// Only the host shuffles, deals, and broadcasts SETUP
-						controller.startGame(strName);
-						startGame();
-					}else{
-						// Joining player: just send the join message and wait for SETUP
-						if(network != null){
-							network.sendJoin(strName);
-						}
-						chatArea.append("[GAME MESSAGE] Waiting for host to start game...\n");
-					}
-					
-					*/
-					
 					if(controller != null){
 						boolean blnCanStartNow = controller.startGame(strName);
 
@@ -319,12 +304,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			if(!strTyped.equals("") && blnNetworkReady){
 				strName = strTyped;
 				strPlayNames[0] = strName;
-				/*
-				if(controller != null){
-					controller.startGame(strName);
-				}
-				startGame();
-				*/
+				
 				
 				if(controller != null){
 					boolean blnCanStartNow = controller.startGame(strName);
@@ -402,24 +382,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				chatArea.append("[GAME MESSAGE] Enter the host IP first.\n");
 			}
 			
-			/*
-			String strIP = ipField.getText().trim();
-
-			if(controller != null && !strIP.equals("") && !strIP.equals("Enter host IP")){
-				boolean blnWorked = controller.joinGame(strIP);
-				
-				if(blnWorked){
-					blnNetworkReady = true;
-					chatArea.append("[GAME MESSAGE] Connected to host: " + strIP + "\n");
-				}else{
-					chatArea.append("[GAME MESSAGE] Could not connect to host. Check host IP and firewall.\n");
-					blnNetworkReady = false;
-				}
-			}else{
-				chatArea.append("[GAME MESSAGE] Enter the host IP first.\n");
-				blnNetworkReady = false;
-			}
-			*/
+			
 		}else if(e.getSource() == chatInput){
 			String strMsg = chatInput.getText().trim();
 			if(!strMsg.equals("")){
@@ -441,7 +404,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			}
 			this.requestFocusInWindow();
 		}
-		// repaint();
+		
 		
 		if(e.getSource() != chatInput){
 			repaint();
@@ -458,7 +421,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	public void mouseClicked(MouseEvent e){
 		if(blnEnterScreen){
 			fadeToScreen("play");
-			// showPlayScreen();
+			
 		}else if(blnFlipFirst){
 			// advance from flip first screen to first player's turn
 			int intMyIndex = (controller != null) ? controller.getLocalPlayerIndex() : 0;
@@ -502,7 +465,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	public void keyPressed(KeyEvent e){
 		if(blnEnterScreen){
 			fadeToScreen("play");
-			// showPlayScreen();
+			
 		}else if(e.getKeyCode() == KeyEvent.VK_ENTER){
 			// pressing Enter during gameplay
 			boolean blnGameplayScreen = blnTurnScreen || blnWaitScreen || blnDisplayCard || blnPickCard;
@@ -587,7 +550,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		button.setContentAreaFilled(true);
 		button.setBorderPainted(false);
 		
-		// button.addMouseListener(this);
+		
 		return button;
 	}
 	
@@ -755,8 +718,6 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			intCurrentTurn = model.intCurrentTurn;
 			blnClockwise = model.blnClockwise;
 			// Copy card counts
-			// intMyIndex = (controller != null) ? controller.getLocalPlayerIndex() : 0;  // ← no 'int' here
-			// intCardCount1 = model.intHandSizes[intMyIndex];
 			intCardCount1 = intHandSize;
 
 			int intOppSlot = 0;
@@ -803,7 +764,6 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		blnHelp = false;
 		blnLeaderBoard = false;
 
-		// blnNetworkReady = false;
 		preloadCardImages(); // reload images with updated deck + theme
 		fadeToScreen("flipfirst");
 	}
@@ -1011,7 +971,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	}
 	
 	
-		// --- FIX 1 helper: check if a card name is a legal play against the view's discard pile ---
+		// Check if a card name is a legal play against the view's discard pile ---
 	private boolean isValidPlay(String strCardName){
 		// Wild cards are always valid
 		if(strCardName.startsWith("wild")){
@@ -2176,22 +2136,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 						if(strTurnParts.length >= 3 && !strTurnParts[2].equals("")){
 							strWildColor = strTurnParts[2];
 						}
-						
-						/*
-						
-						if(model != null){
-							int intMyIndex = (controller != null) ? controller.getLocalPlayerIndex() : 0;
-							intCardCount1 = model.intHandSizes[intMyIndex];
-							int intOppSlot = 0;
-							for(int i = 0; i < 3; i++){
-								if(i != intMyIndex){
-									if (intOppSlot == 0) intCardCount2 = model.intHandSizes[i];
-									else                 intCardCount3 = model.intHandSizes[i];
-									intOppSlot++;
-								}
-							}
-						}
-						*/
+					
 						
 						if (model != null && !strCardPlayed.equals("") && !strCardPlayed.equals("draw")) {
 							for (int d = 0; d < model.intDeckSize; d++) {
@@ -2233,14 +2178,6 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 							
 							int intMyIdx2 = (controller != null) ? controller.getLocalPlayerIndex() : 0;
 							
-							/*intHandSize = model.intHandSizes[intMyIdx2];
-							intCardCount1 = intHandSize;
-							for (int i = 0; i < intHandSize; i++) {
-								strPlayHand[i] = model.strHands[intMyIdx2][i];
-							}
-							
-							*/
-							
 							int intNewSize = model.intHandSizes[intMyIdx2];
 							while (intHandSize < intNewSize && intDrawPileSize > 0) {
 								strPlayHand[intHandSize] = strDrawPile[0];
@@ -2256,20 +2193,6 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 							
 						}
 								
-						/*				
-						String strValue = strCardPlayed.replace("yellow","").replace("green","")
-														.replace("blue","").replace("red","");
-														
-						boolean blnIsSkip = strValue.equals("skip")
-										 || strValue.equals("draw2")
-										 || strValue.equals("wilddraw4");
-						advanceTurn();
-						if (blnIsSkip) {
-							advanceTurn();
-						}
-						
-						*/
-						
 						
 						if (strTurnParts.length >= 5) {
 							try {
@@ -2405,65 +2328,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		
 		return "127.0.0.1";
 	}
-	/*
-	private String getLocalIPAddress(){
-		try{
-			java.util.Enumeration<java.net.NetworkInterface> interfaces = java.net.NetworkInterface.getNetworkInterfaces();
-			while(interfaces.hasMoreElements()){
-				java.net.NetworkInterface iface = interfaces.nextElement();
-				// skip loopback and inactive interfaces
-				if(iface.isLoopback() || !iface.isUp()){
-					continue;
-				}
-				java.util.Enumeration<java.net.InetAddress> addresses = iface.getInetAddresses();
-				while(addresses.hasMoreElements()){
-					java.net.InetAddress addr = addresses.nextElement();
-					// only want IPv4 site-local addresses (192.168.x.x, 10.x.x.x, 172.16.x.x)
-					if(addr instanceof java.net.Inet4Address && addr.isSiteLocalAddress()){
-						return addr.getHostAddress();
-					}
-				}
-			}
-		}catch(Exception e){
-			System.out.println("Could not get local IP: " + e.getMessage());
-		}
-		// fallback
-		return "127.0.0.1";
-	}
-	*/
-	/*
-	private String getLocalIPAddress(){
-		try{
-			Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-			
-			while(interfaces.hasMoreElements()){
-				NetworkInterface networkInterface = interfaces.nextElement();
-				
-				if(networkInterface.isLoopback() || !networkInterface.isUp()){
-					continue;
-				}
-				
-				Enumeration<InetAddress> addresses = networkInterface.getInetAddresses();
-				
-				while(addresses.hasMoreElements()){
-					InetAddress address = addresses.nextElement();
-					
-					if(address instanceof Inet4Address){
-						String strIP = address.getHostAddress();
-						
-						if(strIP.startsWith("192.168.") || strIP.startsWith("10.") || strIP.startsWith("172.")){
-							return strIP;
-						}
-					}
-				}
-			}
-		}catch(Exception e){
-			System.out.println("Could not find local IP: " + e.getMessage());
-		}
-		
-		return "unknown";
-	}
-	*/
+	
 	
 	/**
 	 * Called by the host-side controller once the SETUP message has been
@@ -2680,11 +2545,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			imgStart = ImageIO.read(new File(strPath + "start_bg.png"));
 			imgBackground = ImageIO.read(new File(strPath + "general_bg.png"));
 			imgWait = ImageIO.read(new File(strPath + "wait_bg.png"));
-			// imgPickCard = ImageIO.read(new File(strPath + "pick_card_bg.png"));
-			// imgDisplay = ImageIO.read(new File(strPath + "display_bg.png"));
-			// imgYourTurn = ImageIO.read(new File(strPath + "your_turn_bg.png"));
-		 	// imgGameOver = ImageIO.read(new File(strPath + "general_bg.png"));
-			// imgEliminated = ImageIO.read(new File(strPath + "general_bg.png"));
+			
 		}catch(IOException e){
 			System.out.println("Error: Could not load image");
 			e.printStackTrace();
@@ -2693,10 +2554,4 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		preloadCardImages();
 	}
 	
-	// Main Method
-	/*
-	public static void main(String[] args){
-		new UnoView();
-	}
-	*/
 }
