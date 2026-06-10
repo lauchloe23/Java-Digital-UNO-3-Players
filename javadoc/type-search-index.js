@@ -1,1 +1,0 @@
-typeSearchIndex = [{"l":"All Classes and Interfaces","u":"allclasses-index.html","k":"18"},{"p":"<Unnamed>","l":"SuperSocketMaster"},{"p":"<Unnamed>","l":"TestMain"},{"p":"<Unnamed>","l":"UnoController"},{"p":"<Unnamed>","l":"UnoModel"},{"p":"<Unnamed>","l":"UnoNetwork"},{"p":"<Unnamed>","l":"UnoView"}];updateSearchResults();

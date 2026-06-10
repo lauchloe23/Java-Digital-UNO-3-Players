@@ -1,1 +1,0 @@
-tagSearchIndex = [{"l":"Serialized Form","h":"","k":"18","u":"serialized-form.html"},{"l":"SuperSocketMaster","h":"class SuperSocketMaster","k":"16","u":"SuperSocketMaster.html#supersocketmaster-heading"}];updateSearchResults();
