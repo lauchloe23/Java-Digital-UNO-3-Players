@@ -241,6 +241,8 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				network.sendTurnUpdate("draw", "", model.intHandSizes);
 			}
 			
+			advanceTurn();
+			
 			//fadeToScreen("turn");
 		}else if(e.getSource() == btnPrev){
 			if(intCardPage > 0){
@@ -1806,7 +1808,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 					showGameOver(strMessage);
 					
 				}else if(strMessage.startsWith("TURN|")){
-					if(blnWaitScreen){
+					if(blnWaitScreen  || blnDisplayCard){
 						String[] strTurnParts = strMessage.split("\\|");
 						String strCardPlayed = strTurnParts.length >= 2 ? strTurnParts[1] : "";
 						// Capture chosen wild colour if present
@@ -1934,16 +1936,36 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				java.util.Enumeration<java.net.InetAddress> addresses = iface.getInetAddresses();
 				while(addresses.hasMoreElements()){
 					java.net.InetAddress addr = addresses.nextElement();
-					if(addr instanceof java.net.Inet4Address && addr.isSiteLocalAddress()){
-						System.out.println("Using IP: " + addr.getHostAddress() 
-							+ " from interface: " + iface.getDisplayName());
-						return addr.getHostAddress();
-					}
+					if(!(addr instanceof java.net.Inet4Address)) continue;
+						String strIP = addr.getHostAddress();
+
+						// ADDED: accept site-local OR any common private-range prefix
+						if(addr.isSiteLocalAddress()
+								|| strIP.startsWith("192.168.")
+								|| strIP.startsWith("10.")
+								|| strIP.startsWith("172.")){
+							System.out.println("Using IP: " + strIP
+								+ " from interface: " + iface.getDisplayName());
+							return strIP;
+						}
 				}
 			}
 		}catch(Exception e){
 			System.out.println("Could not get local IP: " + e.getMessage());
 		}
+		
+		// ADDED: hostname-based fallback before giving up
+		try{
+			String strFallback = java.net.InetAddress.getLocalHost().getHostAddress();
+			if(!strFallback.equals("127.0.0.1")){
+				System.out.println("Fallback IP via hostname: " + strFallback);
+				return strFallback;
+			}
+		}catch(Exception e){
+			System.out.println("Hostname fallback failed: " + e.getMessage());
+		}
+		
+		
 		return "127.0.0.1";
 	}
 	/*
