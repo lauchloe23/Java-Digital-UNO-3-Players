@@ -1864,6 +1864,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		resetScreens();
 		blnWaitScreen = true;
 		setComponentVisibility();
+		repaint();
 		this.requestFocusInWindow();
 	}
 
@@ -1895,6 +1896,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		resetScreens();
 		blnTurnScreen = true;
 		setComponentVisibility();
+		repaint();
 		this.requestFocusInWindow();
 	}
 
@@ -2096,6 +2098,17 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 						if (strTurnParts.length >= 5) {
 							try {
 								intCurrentTurn = Integer.parseInt(strTurnParts[4].trim());
+						if(model != null){
+							model.intCurrentTurn = intCurrentTurn;
+						}
+						int intMyIndex = (controller != null) ? controller.getLocalPlayerIndex() : 0;
+						if(blnPlayerEliminated[intMyIndex]){
+							showWaitScreen();
+						}else if(intTurnOrder[intCurrentTurn] == intMyIndex){
+							showTurnScreen();
+						}else{
+							showWaitScreen();
+						}
 							} catch (NumberFormatException ex) {
 								advanceTurn();  // fallback
 							}
