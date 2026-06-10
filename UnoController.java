@@ -28,6 +28,10 @@ public class UnoController implements ActionListener{
 	private boolean blnJoinerReady = false;
 	/**Unique client player index bound specifically to the local interface*/
 	private int intLocalPlayerIndex = 0;
+	/** Number of remote players who have joined (host side). Host is seat 0. */
+	private int intJoinCount = 0;
+	/** How many joiners have signalled READY (host side). */
+	private int intReadyCount = 0;
 	
 	//Methods
 	/** Responds to system actions and custom event triggers.
@@ -67,6 +71,31 @@ public class UnoController implements ActionListener{
 	public void handleNetworkMessage(String strMessage){
 		System.out.println("Network Message: " + strMessage);
 		
+		// Host assigns a unique player index to each joiner as they arrive.
+		if(strMessage.startsWith("JOIN|")){
+			if(blnIsHost){
+				String strJoinName = strMessage.substring(5);
+				intJoinCount++;
+				int intAssigned = intJoinCount; // 1 for first joiner, 2 for second
+				if(intAssigned > 2) intAssigned = 2; // safety: only 3 seats
+				model.strPlayerNames[intAssigned] = strJoinName; // for Bug 1 name sync
+				network.send("INDEX|" + intAssigned);
+			}
+		}
+
+		// Joiner receives the seat index the host assigned to it.
+		if(strMessage.startsWith("INDEX|")){
+			if(!blnIsHost){
+				try{
+					intLocalPlayerIndex = Integer.parseInt(strMessage.substring(6).trim());
+				}catch(NumberFormatException e){
+					intLocalPlayerIndex = 1;
+				}
+			}
+		}
+		
+		
+		
 		if(strMessage.startsWith("READY|")){
 			if(blnIsHost){
 				blnJoinerReady = true;
@@ -94,7 +123,7 @@ public class UnoController implements ActionListener{
 				strDiscardTop = new String[]{"", "", "", ""};
 			}
 			
-			network.sendGameSetup(model.strHands, model.intHandSizes, model.intTurnOrder, strDiscardTop);
+			network.sendGameSetup(model.strHands, model.intHandSizes, model.intTurnOrder, strDiscardTop, model.strPlayerNames);
 		}
 	}
 	
@@ -111,7 +140,7 @@ public class UnoController implements ActionListener{
 	 */
 	public boolean joinGame(String strIP){
 		blnIsHost = false;
-		intLocalPlayerIndex = 1; 
+		//intLocalPlayerIndex = 1; 
 		blnConnected = network.connectServer(strIP, intDefaultPort);
 		return blnConnected;
 	}
@@ -161,6 +190,7 @@ public class UnoController implements ActionListener{
 			// Joiner: load the deck so card lookups work when SETUP arrives
 			model.loadDeck();
 			if(network != null){
+				network.send("JOIN|" + strPlayerName); 
 				network.sendJoin(strPlayerName);
 				network.send("READY|" + strPlayerName);
 			}
@@ -173,7 +203,7 @@ public class UnoController implements ActionListener{
 		
 		if(network != null){
 			network.sendJoin(strPlayerName);
-			if(blnJoinerReady){
+			if(intReadyCount >= 2){
 				sendCurrentSetup();
 			}
 		}

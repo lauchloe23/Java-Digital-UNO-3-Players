@@ -205,7 +205,7 @@ public class UnoNetwork implements ActionListener{
 	 * intTurnOrder: The randomized seating order determining who gets to play first, second, third, and so on.
 	 * strDiscardTop: The name/ID of the very first card turned face-up on the table to start the game.
 	 */
-	public void sendGameSetup(String[][][] strHands, int[] intHandSizes, int[] intTurnOrder, String[] strDiscardTop){
+	public void sendGameSetup(String[][][] strHands, int[] intHandSizes, int[] intTurnOrder, String[] strDiscardTop,String[] strPlayerNames){
 		if(ssm != null){
 			// Each card is encoded as cardName
 			String strMsg = "SETUP|";
@@ -226,6 +226,14 @@ public class UnoNetwork implements ActionListener{
 			// card name of top of dicard
 			strMsg += strDiscardTop[0];
 			
+			strMsg += "|";
+			
+			 // NEW: append the three player names
+			for(int i = 0; i < 3; i++){
+				strMsg += strPlayerNames[i];
+				if(i < 2) strMsg += ",";
+			}
+				
 			ssm.sendText(strMsg);
 		}
 	}

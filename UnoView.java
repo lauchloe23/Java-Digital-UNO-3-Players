@@ -354,7 +354,11 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 								chatArea.append("[GAME MESSAGE] Tell your partner to enter that IP and click JOIN GAME (port 5555)\n");
 								ipField.setText(strHostIP);
 							}else{
-								chatArea.append("[GAME MESSAGE] Could not host game. Port may already be in use.\n");
+								chatArea.append("[GAME MESSAGE] Could not host game on port 5555.\n");
+								chatArea.append("[GAME MESSAGE] On Windows, allow Java through Windows Defender Firewall (Private networks),\n");
+								chatArea.append("[GAME MESSAGE] or run once as Administrator. Also confirm both PCs are on the same network.\n");
+								
+								//chatArea.append("[GAME MESSAGE] Could not host game. Port may already be in use.\n");
 								blnNetworkReady = false;
 								btnHost.setEnabled(true);
 								btnJoin.setEnabled(true);
@@ -1913,6 +1917,14 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 								model.strDiscardPile[0] = model.strDeck[d];
 								model.intDiscardPileSize = 1;
 								break;
+							}
+						}
+						
+						
+						if(strParts.length >= 7){
+							String[] strNames = strParts[6].split(",");
+							for(int i = 0; i < 3 && i < strNames.length; i++){
+								strPlayNames[i] = strNames[i];
 							}
 						}
 						
