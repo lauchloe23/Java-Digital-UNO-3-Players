@@ -2276,6 +2276,20 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		return "unknown";
 	}
 	*/
+	
+	/**
+	 * Called by the host-side controller once the SETUP message has been
+	 * broadcast.  Transitions the view out of the lobby/waiting screen and
+	 * into the main game screen so the host enters the game at the same
+	 * moment the joiners receive SETUP.
+	 */
+	public void beginGameFromHost() {
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				startGame();
+			}
+		});
+	}
 
 	/**
 	 * Default public constructor initializing of UnoView
