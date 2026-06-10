@@ -716,7 +716,7 @@ public class UnoModel{
 	*/
 	public int getDrawPileSize(){
 		return intDrawPileSize;
-	} 
+	}
 
 	// return true if game over
 	/**Checks the current game state to see if a player has won. 

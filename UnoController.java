@@ -35,6 +35,11 @@ public class UnoController implements ActionListener{
 	/** How many joiners have signalled READY (host side). */
 	private int intReadyCount = 0;
 	
+	/** This machine's own player name (used to match targeted INDEX messages). */
+	private String strLocalName = "";
+	/** Joiner-side flag: true once this machine has been assigned its seat index. */
+	private boolean blnIndexAssigned = false;
+	
 	//Methods
 	/** Responds to system actions and custom event triggers.
 		Filters incoming messages.
@@ -81,27 +86,32 @@ public class UnoController implements ActionListener{
 				int intAssigned = intJoinCount; // 1 for first joiner, 2 for second
 				if(intAssigned > 2) intAssigned = 2; // safety: only 3 seats
 				model.strPlayerNames[intAssigned] = strJoinName; // for Bug 1 name sync
-				network.send("INDEX|" + intAssigned);
+				network.send("INDEX|" + strJoinName + "|" + intAssigned);
+				//network.send("INDEX|" + intAssigned);
 			}
 		}
 
 		// Joiner receives the seat index the host assigned to it.
 		if(strMessage.startsWith("INDEX|")){
-			if(!blnIsHost){
-				try{
-					intLocalPlayerIndex = Integer.parseInt(strMessage.substring(6).trim());
-				}catch(NumberFormatException e){
-					intLocalPlayerIndex = 1;
+			if(!blnIsHost && !blnIndexAssigned){
+				String[] strIdxParts = strMessage.split("\\|");
+				if(strIdxParts.length >= 3 && strIdxParts[1].equals(strLocalName)){
+					try{
+						intLocalPlayerIndex = Integer.parseInt(strIdxParts[2].trim());
+						blnIndexAssigned = true;
+					}catch(NumberFormatException e){
+						intLocalPlayerIndex = 1;
+					}
 				}
 			}
 		}
 		
 		
-		
 		if(strMessage.startsWith("READY|")){
 			if(blnIsHost){
+				intReadyCount++;
 				blnJoinerReady = true;
-				if(blnGameStarted){
+				if(blnGameStarted && intReadyCount >= 2){
 					sendCurrentSetup();
 				}
 			}
@@ -126,6 +136,11 @@ public class UnoController implements ActionListener{
 			}
 			
 			network.sendGameSetup(model.strHands, model.intHandSizes, model.intTurnOrder, strDiscardTop, model.strPlayerNames);
+			
+			// The host enters the game at the same moment the joiners receive SETUP.
+			if(view != null){
+				view.beginGameFromHost();
+			}
 		}
 	}
 	
@@ -185,7 +200,7 @@ public class UnoController implements ActionListener{
 		if(!blnConnected){
 			return false;
 		}
-		
+		strLocalName = strPlayerName;
 		model.strPlayerNames[0] = strPlayerName;
 		
 		if(!blnIsHost){
