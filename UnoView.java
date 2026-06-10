@@ -204,7 +204,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 						if(blnCanStartNow){
 							startGame();
 						}else{
-							chatArea.append("[GAME MESSAGE] Waiting for host setup...\n");
+							chatArea.append("[GAME MESSAGE] Waiting for all players to be ready...\n");
 							// blnChat = true;
 							// setComponentVisibility();
 						}
@@ -684,6 +684,13 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			for(int i = 0; i < 3; i++){
 				intTurnOrder[i] = model.intTurnOrder[i];
 			}
+			
+			for(int i = 0; i < 3; i++){
+				if(model.strPlayerNames[i] != null && !model.strPlayerNames[i].equals("")){
+					strPlayNames[i] = model.strPlayerNames[i];
+				}
+			}
+			
 			intCurrentTurn = model.intCurrentTurn;
 			blnClockwise = model.blnClockwise;
 			// Copy card counts
@@ -1787,6 +1794,14 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		this.network = network;
 	}
 	
+	public void beginGameFromHost(){
+		SwingUtilities.invokeLater(new Runnable(){
+			public void run(){
+				startGame();
+			}
+		});
+	}
+	
 	public void processNetworkMessage(String strMessage){
 		SwingUtilities.invokeLater(new Runnable(){
 			public void run(){
@@ -1812,7 +1827,11 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 					showGameOver(strMessage);
 					
 				}else if(strMessage.startsWith("TURN|")){
-					if(blnWaitScreen  || blnDisplayCard){
+					int intMyIndex = (controller != null) ? controller.getLocalPlayerIndex() : 0;
+					boolean blnActingPlayer = (intTurnOrder[intCurrentTurn] == intMyIndex)
+					                          && blnTurnScreen;
+					if(!blnActingPlayer){
+						
 						String[] strTurnParts = strMessage.split("\\|");
 						String strCardPlayed = strTurnParts.length >= 2 ? strTurnParts[1] : "";
 						// Capture chosen wild colour if present
@@ -1854,7 +1873,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 									model.intHandSizes[i] = Integer.parseInt(strSizes[i]);
 								}
 							}
-							int intMyIndex = (controller != null) ? controller.getLocalPlayerIndex() : 0;
+							//int intMyIndex = (controller != null) ? controller.getLocalPlayerIndex() : 0;
 							intCardCount1 = model.intHandSizes[intMyIndex];
 							int intOppSlot = 0;
 							for (int i = 0; i < 3; i++) {
