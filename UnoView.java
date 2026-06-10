@@ -271,11 +271,12 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				int intMyIdx = (controller != null) ? controller.getLocalPlayerIndex() : 0;
 				model.intHandSizes[intMyIdx] = intHandSize;
 			}
-			if(network != null && model != null){
-				network.sendTurnUpdate("draw", "", model.intHandSizes);
-			}
 			
 			advanceTurn();
+			if(network != null && model != null){
+				network.sendTurnUpdate("draw", "", model.intHandSizes,model.intCurrentTurn);
+			}
+
 			
 			//fadeToScreen("turn");
 		}else if(e.getSource() == btnPrev){
@@ -294,7 +295,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			
 			advanceTurn();
 			if(network != null){
-				network.sendTurnUpdate("wild", "red", model.intHandSizes);
+				network.sendTurnUpdate("wild", "red", model.intHandSizes,model.intCurrentTurn);
 			}
 		}else if(e.getSource() == btnWildBlue){
 			strWildColor = "blue";
@@ -307,7 +308,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			}
 			advanceTurn();
 			if(network != null){
-				network.sendTurnUpdate("wild", "blue", model.intHandSizes);
+				network.sendTurnUpdate("wild", "blue", model.intHandSizes,model.intCurrentTurn);
 			}
 		}else if(e.getSource() == btnWildGreen){
 			strWildColor = "green";
@@ -320,7 +321,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			}
 			advanceTurn();
 			if(network != null){
-				network.sendTurnUpdate("wild", "green", model.intHandSizes);
+				network.sendTurnUpdate("wild", "green", model.intHandSizes,model.intCurrentTurn);
 			}
 		}else if(e.getSource() == btnWildYellow){
 			strWildColor = "yellow";
@@ -333,7 +334,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			}
 			advanceTurn();
 			if(network != null){
-				network.sendTurnUpdate("wild", "yellow", model.intHandSizes);
+				network.sendTurnUpdate("wild", "yellow", model.intHandSizes,model.intCurrentTurn);
 			}
 		}else if(e.getSource() == btnEliminatedOK){
 			blnEliminated = false;
@@ -1056,6 +1057,11 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		// Move card to discard pile
 		strDiscardPile[intDiscardPileSize] = strPlayHand[intIndex];
 		intDiscardPileSize++;
+		
+		// Lifting wild restriction when playing a non-wild card on top
+		if (!strCardName.startsWith("wild")) {
+			strWildColor = "";
+		}
 
 		// Remove card from hand by shifting left
 		for(int i = intIndex; i < intHandSize - 1; i++){
@@ -1991,7 +1997,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 					showGameOver(strMessage);
 					
 				}else if(strMessage.startsWith("TURN|")){
-					if(blnWaitScreen  || blnDisplayCard){
+					if(blnWaitScreen || blnDisplayCard || blnFlipFirst || blnTurnScreen){
 						String[] strTurnParts = strMessage.split("\\|");
 						String strCardPlayed = strTurnParts.length >= 2 ? strTurnParts[1] : "";
 						// Capture chosen wild colour if present
@@ -2048,8 +2054,36 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 							for (int i = 0; i < intDiscardPileSize; i++) {
 								strDiscardPile[i] = model.strDiscardPile[i];
 							}
+							
+							if (!strCardPlayed.startsWith("wild") && !strCardPlayed.equals("draw")) {
+								strWildColor = "";
+							}
+							
+							int intMyIdx2 = (controller != null) ? controller.getLocalPlayerIndex() : 0;
+							
+							/*intHandSize = model.intHandSizes[intMyIdx2];
+							intCardCount1 = intHandSize;
+							for (int i = 0; i < intHandSize; i++) {
+								strPlayHand[i] = model.strHands[intMyIdx2][i];
+							}
+							
+							*/
+							
+							int intNewSize = model.intHandSizes[intMyIdx2];
+							while (intHandSize < intNewSize && intDrawPileSize > 0) {
+								strPlayHand[intHandSize] = strDrawPile[0];
+								for (int s = 0; s < intDrawPileSize - 1; s++) {
+									strDrawPile[s] = strDrawPile[s + 1];
+								}
+								intDrawPileSize--;
+								intHandSize++;
+							}
+							intCardCount1 = intHandSize;
+							
+							
 						}
-										
+								
+						/*				
 						String strValue = strCardPlayed.replace("yellow","").replace("green","")
 														.replace("blue","").replace("red","");
 														
@@ -2059,6 +2093,19 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 						advanceTurn();
 						if (blnIsSkip) {
 							advanceTurn();
+						}
+						
+						*/
+						
+						
+						if (strTurnParts.length >= 5) {
+							try {
+								intCurrentTurn = Integer.parseInt(strTurnParts[4].trim());
+							} catch (NumberFormatException ex) {
+								advanceTurn();  // fallback
+							}
+						} else {
+							advanceTurn();  // fallback for old messages
 						}
 					}
 				}else if(strMessage.startsWith("SETUP|")){
