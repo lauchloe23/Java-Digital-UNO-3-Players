@@ -1096,13 +1096,15 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			return;
 		}
 		
-		// NEW — before sendTurnUpdate in playCard() and each wild button:
 		if(model != null){
 			int intMyIdx = (controller != null) ? controller.getLocalPlayerIndex() : 0;
 			model.intHandSizes[intMyIdx] = intHandSize;
 		}
-				
+
 		advanceTurn();
+		if(model != null){
+			model.intCurrentTurn = intCurrentTurn;
+		}
 		if(network != null){
 			network.sendTurnUpdate(strCardName, strWildColor, model.intHandSizes, model.intCurrentTurn);
 		}
@@ -1117,34 +1119,36 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		int intCount = 0;
 		boolean searchingForActivePlayer = true;
 
-		while (searchingForActivePlayer){
-			// Move to the next turn based on direction
+		while(searchingForActivePlayer){
 			if(blnClockwise){
 				intCurrentTurn = (intCurrentTurn + 1) % 3;
-			} else {
+			}else{
 				intCurrentTurn = (intCurrentTurn + 2) % 3;
 			}
 			intCount++;
-			// stop if the player is not eliminated 
 			searchingForActivePlayer = blnPlayerEliminated[intTurnOrder[intCurrentTurn]] && intCount < 3;
 		}
-		
-		// check if only 1 active player remains
+
 		int intActive = 0;
 		int intLastActive = 0;
 		for(int i = 0; i < 3; i++){
-			if(!blnPlayerEliminated[i]){ 
-				intActive++; 
-				intLastActive = i; 
+			if(!blnPlayerEliminated[i]){
+				intActive++;
+				intLastActive = i;
 			}
 		}
-		
+
 		if(intActive == 1){
 			strWinner = strPlayNames[intLastActive];
 			fadeToScreen("gameover");
 			return;
 		}
-		
+
+		if(model != null){
+			model.intCurrentTurn = intCurrentTurn;
+			model.blnClockwise = blnClockwise;
+		}
+
 		int intMyIndex = (controller != null) ? controller.getLocalPlayerIndex() : 0;
 		if(blnPlayerEliminated[intMyIndex]){
 			fadeToScreen("wait");
@@ -1153,20 +1157,6 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		}else{
 			fadeToScreen("wait");
 		}
-		
-		/*
-		if(blnClockwise){
-			intCurrentTurn = (intCurrentTurn + 1) % 3;
-		}else{
-			intCurrentTurn = (intCurrentTurn + 2) % 3;
-		}
-		// if-else: play if your turn; else, wait for other player
-		if(intTurnOrder[intCurrentTurn] == 0){
-			fadeToScreen("turn");
-		}else{
-			fadeToScreen("wait");
-		}
-		*/
 	}
 	
 	private String getOpponentName(){
