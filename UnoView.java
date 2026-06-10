@@ -820,6 +820,9 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		blnEliminated = false;
 		blnWildPicker = false;
 		blnSetupReceived = false;
+		blnChat = false;
+		blnHelp = false;
+		blnLeaderBoard = false;
 
 		// blnNetworkReady = false;
 		preloadCardImages(); // reload images with updated deck + theme
@@ -1861,8 +1864,9 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		resetScreens();
 		blnWaitScreen = true;
 		setComponentVisibility();
+		this.requestFocusInWindow();
 	}
-	
+
 	/**
 	 * Shows the screen where a player must pick a card.
 	 * This can happen when no valid moves are available.
@@ -1891,8 +1895,9 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		resetScreens();
 		blnTurnScreen = true;
 		setComponentVisibility();
+		this.requestFocusInWindow();
 	}
-	
+
 	/**
 	 * Shows the game over screen.
 	 * Displays the winner of the game.
@@ -2148,6 +2153,11 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 								strPlayNames[i] = strNames[i];
 							}
 						}
+						
+						// Hide chat and overlays when the game begins
+						blnChat = false;
+						blnHelp = false;
+						blnLeaderBoard = false;
 						
 						// sync view from model
 						startGame();

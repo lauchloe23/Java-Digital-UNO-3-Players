@@ -111,7 +111,7 @@ public class UnoController implements ActionListener{
 			if(blnIsHost){
 				intReadyCount++;
 				blnJoinerReady = true;
-				if(blnGameStarted && intReadyCount >= 2){
+				if(blnGameStarted && intJoinCount > 0 && intReadyCount >= intJoinCount){
 					sendCurrentSetup();
 				}
 			}
@@ -220,7 +220,7 @@ public class UnoController implements ActionListener{
 		
 		if(network != null){
 			network.sendJoin(strPlayerName);
-			if(intReadyCount >= 2){
+			if(blnGameStarted && intJoinCount > 0 && intReadyCount >= intJoinCount){
 				sendCurrentSetup();
 			}
 		}
