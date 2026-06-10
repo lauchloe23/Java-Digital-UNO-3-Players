@@ -807,7 +807,20 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		preloadCardImages(); // reload images with updated deck + theme
 		fadeToScreen("flipfirst");
 	}
-	
+
+	private String getPlayerName(int intIndex){
+		if(model != null && model.strPlayerNames != null && intIndex >= 0 && intIndex < model.strPlayerNames.length){
+			String strCandidate = model.strPlayerNames[intIndex];
+			if(strCandidate != null && !strCandidate.isEmpty()){
+				return strCandidate;
+			}
+		}
+		if(intIndex >= 0 && intIndex < strPlayNames.length && strPlayNames[intIndex] != null && !strPlayNames[intIndex].isEmpty()){
+			return strPlayNames[intIndex];
+		}
+		return "Player " + (intIndex + 1);
+	}
+
 	private void loadDeck(){
 		intDeckSize = 0;
 		String strCSVPath = "cards.csv";
@@ -1222,7 +1235,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		if(blnDraw4){
 			advanceTurn();
 			int intTarget = intTurnOrder[intCurrentTurn];
-			String strTargetName = strPlayNames[intTarget];
+			String strTargetName = getPlayerName(intTarget);
 			if(model != null){
 				model.intHandSizes[intTarget] += 4;
 			} else {
@@ -1234,8 +1247,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			chatArea.setCaretPosition(chatArea.getDocument().getLength());
 			if(network != null){
 				String attacker = (model != null && model.strPlayerNames != null && model.strPlayerNames.length > 0) ? model.strPlayerNames[(controller != null) ? controller.getLocalPlayerIndex() : 0] : strName;
-				String target = (model != null && model.strPlayerNames != null && model.strPlayerNames.length > intTarget) ? model.strPlayerNames[intTarget] : strTargetName;
-				network.sendPlayerAttack(attacker, "wilddraw4", target);
+				network.sendPlayerAttack(attacker, "wilddraw4", strTargetName);
 			}
 			advanceTurn();
 		} else {
@@ -1453,13 +1465,15 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		}
 		
 		// Overlay Screen
+        boolean blnGameplayOverlay = blnTurnScreen || blnWaitScreen || blnDisplayCard || blnPickCard;
+
 		if(blnHelp){
 			drawHelp(g2);
 		}
 		if(blnLeaderBoard){
 			drawLeaderBoard(g2);
 		}
-		if(blnChat){
+		if(blnChat && blnGameplayOverlay){
 			drawChat(g2);
 		}
 		if(blnWildPicker){
@@ -1605,11 +1619,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		if(intTurnOrder != null && intTurnOrder.length > 0){
 			intWaitingPlayerIndex = intTurnOrder[intCurrentTurn];
 		}
-		if(model != null && model.strPlayerNames != null && model.strPlayerNames.length > intWaitingPlayerIndex && model.strPlayerNames[intWaitingPlayerIndex] != null && !model.strPlayerNames[intWaitingPlayerIndex].equals("")){
-			strWaitingName = model.strPlayerNames[intWaitingPlayerIndex];
-		} else {
-			strWaitingName = strPlayNames[intWaitingPlayerIndex];
-		}
+		strWaitingName = getPlayerName(intWaitingPlayerIndex);
 		drawCenteredString(g2, strWaitingName.toUpperCase(), 640, 390);
 	}
 	
@@ -2577,6 +2587,9 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		btnWildRed.setBackground(new Color(220, 50, 50));
 		btnWildRed.setForeground(Color.WHITE);
 		btnWildRed.setFont(buttonFont);
+		btnWildRed.setOpaque(true);
+		btnWildRed.setContentAreaFilled(true);
+		btnWildRed.setBorderPainted(false);
 		btnWildRed.setFocusPainted(false);
 		btnWildRed.setBounds(370, 320, 120, 120);
 		btnWildRed.setVisible(false);
@@ -2586,6 +2599,9 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		btnWildBlue.setBackground(new Color(30, 100, 200));
 		btnWildBlue.setForeground(Color.WHITE);
 		btnWildBlue.setFont(buttonFont);
+		btnWildBlue.setOpaque(true);
+		btnWildBlue.setContentAreaFilled(true);
+		btnWildBlue.setBorderPainted(false);
 		btnWildBlue.setFocusPainted(false);
 		btnWildBlue.setBounds(510, 320, 120, 120);
 		btnWildBlue.setVisible(false);
@@ -2595,6 +2611,9 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		btnWildGreen.setBackground(new Color(30, 160, 80));
 		btnWildGreen.setForeground(Color.WHITE);
 		btnWildGreen.setFont(buttonFont);
+		btnWildGreen.setOpaque(true);
+		btnWildGreen.setContentAreaFilled(true);
+		btnWildGreen.setBorderPainted(false);
 		btnWildGreen.setFocusPainted(false);
 		btnWildGreen.setBounds(650, 320, 120, 120);
 		btnWildGreen.setVisible(false);
@@ -2602,8 +2621,11 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		this.add(btnWildGreen);
 		
 		btnWildYellow.setBackground(new Color(230, 190, 30));
-		btnWildYellow.setForeground(Color.WHITE);
+		btnWildYellow.setForeground(Color.BLACK);
 		btnWildYellow.setFont(buttonFont);
+		btnWildYellow.setOpaque(true);
+		btnWildYellow.setContentAreaFilled(true);
+		btnWildYellow.setBorderPainted(false);
 		btnWildYellow.setFocusPainted(false);
 		btnWildYellow.setBounds(790, 320, 120, 120);
 		btnWildYellow.setVisible(false);
