@@ -1134,7 +1134,9 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			chatArea.append("[GAME MESSAGE] " + strSkipped + " is skipped!\n");
 			chatArea.setCaretPosition(chatArea.getDocument().getLength());
 			if(network != null){
-				network.sendPlayerAttack(strName, "skip", strSkipped);
+				String attacker = (model != null && model.strPlayerNames != null && model.strPlayerNames.length > 0) ? model.strPlayerNames[(controller != null) ? controller.getLocalPlayerIndex() : 0] : strName;
+				String target = (model != null && model.strPlayerNames != null && model.strPlayerNames.length > 0) ? model.strPlayerNames[intTurnOrder[intCurrentTurn]] : strSkipped;
+				network.sendPlayerAttack(attacker, "skip", target);
 			}
 			if(model != null) model.intCurrentTurn = intCurrentTurn;
 			if(network != null){
@@ -1155,7 +1157,9 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			chatArea.append("[GAME MESSAGE] " + strTargetName + " draws 2 cards and is skipped!\n");
 			chatArea.setCaretPosition(chatArea.getDocument().getLength());
 			if(network != null){
-				network.sendPlayerAttack(strName, "draw2", strTargetName);
+				String attacker = (model != null && model.strPlayerNames != null && model.strPlayerNames.length > 0) ? model.strPlayerNames[(controller != null) ? controller.getLocalPlayerIndex() : 0] : strName;
+				String target = (model != null && model.strPlayerNames != null && model.strPlayerNames.length > intTarget) ? model.strPlayerNames[intTarget] : strTargetName;
+				network.sendPlayerAttack(attacker, "draw2", target);
 			}
 			advanceTurn();
 			if(model != null) model.intCurrentTurn = intCurrentTurn;
@@ -1177,7 +1181,9 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			chatArea.append("[GAME MESSAGE] " + strTargetName + " draws 4 cards and is skipped!\n");
 			chatArea.setCaretPosition(chatArea.getDocument().getLength());
 			if(network != null){
-				network.sendPlayerAttack(strName, "wilddraw4", strTargetName);
+				String attacker = (model != null && model.strPlayerNames != null && model.strPlayerNames.length > 0) ? model.strPlayerNames[(controller != null) ? controller.getLocalPlayerIndex() : 0] : strName;
+				String target = (model != null && model.strPlayerNames != null && model.strPlayerNames.length > intTarget) ? model.strPlayerNames[intTarget] : strTargetName;
+				network.sendPlayerAttack(attacker, "wilddraw4", target);
 			}
 			advanceTurn();
 			if(model != null) model.intCurrentTurn = intCurrentTurn;
@@ -1224,7 +1230,9 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			chatArea.append("[GAME MESSAGE] " + strTargetName + " draws 4 cards and is skipped!\n");
 			chatArea.setCaretPosition(chatArea.getDocument().getLength());
 			if(network != null){
-				network.sendPlayerAttack(strName, "wilddraw4", strTargetName);
+				String attacker = (model != null && model.strPlayerNames != null && model.strPlayerNames.length > 0) ? model.strPlayerNames[(controller != null) ? controller.getLocalPlayerIndex() : 0] : strName;
+				String target = (model != null && model.strPlayerNames != null && model.strPlayerNames.length > intTarget) ? model.strPlayerNames[intTarget] : strTargetName;
+				network.sendPlayerAttack(attacker, "wilddraw4", target);
 			}
 			advanceTurn();
 		} else {
@@ -1577,12 +1585,23 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		// Waiting for player
 		g2.setColor(transparentBlack);
 		g2.fillRoundRect(290, 270, 700, 180, 20, 20);
-		
+        
 		g2.setFont(titleFont);
 		g2.setColor(Color.WHITE);
 		drawCenteredString(g2, "WAITING FOR", 640, 330);
 		g2.setColor(goldColor);
-		drawCenteredString(g2, strPlayNames[intTurnOrder[intCurrentTurn]].toUpperCase(), 640, 390);
+		// Prefer authoritative names from the model when available
+		String strWaitingName = "";
+		int intWaitingPlayerIndex = 0;
+		if(intTurnOrder != null && intTurnOrder.length > 0){
+			intWaitingPlayerIndex = intTurnOrder[intCurrentTurn];
+		}
+		if(model != null && model.strPlayerNames != null && model.strPlayerNames.length > intWaitingPlayerIndex && model.strPlayerNames[intWaitingPlayerIndex] != null && !model.strPlayerNames[intWaitingPlayerIndex].equals("")){
+			strWaitingName = model.strPlayerNames[intWaitingPlayerIndex];
+		} else {
+			strWaitingName = strPlayNames[intWaitingPlayerIndex];
+		}
+		drawCenteredString(g2, strWaitingName.toUpperCase(), 640, 390);
 	}
 	
 	private void drawPickCard(Graphics2D g2){
@@ -1946,6 +1965,10 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		// chat area screen overlay
 		chatInput.setVisible(blnChat && blnGameplayScreen);
 		chatScroll.setVisible(blnChat && blnGameplayScreen);
+
+		// ensure layout updates and repaint so platform differences show buttons reliably
+		this.revalidate();
+		this.repaint();
 	}
 	
 	// Reset Screens
@@ -2038,6 +2061,9 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	public void showGameOver(String strWinner){
 		this.strWinner = strWinner;
 		resetScreens();
+		// Hide chat overlay when showing game over so losers don't see an empty chat overlay
+		blnChat = false;
+		blnWildPicker = false;
 		blnGameOver = true;
 		setComponentVisibility();
 	}
