@@ -150,6 +150,8 @@ public class UnoModel{
 		}catch(java.io.IOException e){
 		}
 		return null;
+	}
+
 	// backup/fallback deck if csv missing
 	/**constructs a standard 100-card Uno deck configuration to serve 
      * as a backup if "cards.csv" external file cannot be loaded.
