@@ -1,17 +1,23 @@
 #!/bin/zsh
-set -e
 
 # Compile all Java files
-rm -rf out
-mkdir -p out
 javac -d out $(find . -name '*.java')
 
-# Build the jar with compiled classes
-rm -f UnoGame.jar
-jar cfm UnoGame.jar MANIFEST.MF -C out .
+# Copy resource files into the jar build directory
+rm -rf out/resources
+mkdir -p out/resources
+cp -R Image out/resources/ 2>/dev/null || true
+cp cards.csv out/resources/ 2>/dev/null || true
 
-# Add resource files directly into the jar root
-jar uf UnoGame.jar cards.csv || true
-jar uf UnoGame.jar -C Image . || true
+# Create a temporary jar content structure
+rm -rf tmpjar
+mkdir -p tmpjar
+cp -R out/* tmpjar/
+cp MANIFEST.MF tmpjar/
 
-echo "Built UnoGame.jar with resources included"
+# Build the jar
+cd tmpjar
+jar cfm ../UnoGame.jar MANIFEST.MF .
+cd ..
+
+echo "Built UnoGame.jar"
