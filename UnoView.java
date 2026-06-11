@@ -5,6 +5,8 @@ import java.awt.image.BufferedImage;
 import java.awt.geom.RoundRectangle2D;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import javax.imageio.ImageIO;
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -503,16 +505,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		for(int i = 0; i < intDeckSize; i++){
 			int intCol = intTheme + 1; // 1=standard 2=pokemon 3=insideout
 			if(intCol >= strDeck[i].length) intCol = 1;
-			try{
-				File f = new File(strCardPath + strDeck[i][intCol]);
-				if(f.exists()){
-					imgAllCards[i] = ImageIO.read(f);
-				}else{
-					imgAllCards[i] = null;
-				}
-			}catch(IOException e){
-				imgAllCards[i] = null;
-			}
+			imgAllCards[i] = loadImageResource(strCardPath + strDeck[i][intCol]);
 		}
 		System.out.println("Card images preloaded.");
 	}
@@ -654,15 +647,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	}
 	
 	private BufferedImage loadCardImage(String strFileName){
-		try{
-			File f = new File("Image/Cards/" + strFileName);
-			if(f.exists()){
-				return ImageIO.read(f);
-			}
-		}catch(IOException e){
-			// File missing
-		}
-		return null;
+		return loadImageResource("Image/Cards/" + strFileName);
 	}
 
 	private void flipFirstCard(){
@@ -784,12 +769,15 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	private void loadDeck(){
 		intDeckSize = 0;
 		String strCSVPath = "cards.csv";
-		try{
-			BufferedReader reader = new BufferedReader(new FileReader(strCSVPath));
+		try(InputStream deckStream = openResourceOrFile(strCSVPath)){
+			if(deckStream == null){
+				System.out.println("Could not find cards.csv: " + strCSVPath);
+				buildFallbackDeck();
+				return;
+			}
+			BufferedReader reader = new BufferedReader(new InputStreamReader(deckStream));
 			reader.readLine();
 			String strLine;
-			
-			// read through each line in csv
 			while((strLine = reader.readLine()) != null){
 				strLine = strLine.trim();
 				if(!strLine.equals("")){
@@ -806,6 +794,32 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			System.out.println("Could not load cards.csv: "+e.getMessage());
 			buildFallbackDeck();
 		}
+	}
+
+	private InputStream openResourceOrFile(String strPath){
+		String resourcePath = strPath.startsWith("/") ? strPath : "/" + strPath;
+		InputStream stream = getClass().getResourceAsStream(resourcePath);
+		if(stream != null){
+			return stream;
+		}
+		try{
+			File file = new File(strPath.startsWith("/") ? strPath.substring(1) : strPath);
+			if(file.exists()){
+				return new java.io.FileInputStream(file);
+			}
+		}catch(IOException e){
+		}
+		return null;
+	}
+
+	private BufferedImage loadImageResource(String strPath){
+		try(InputStream stream = openResourceOrFile(strPath)){
+			if(stream != null){
+				return ImageIO.read(stream);
+			}
+		}catch(IOException e){
+		}
+		return null;
 	}
 	
 	// if csv missing
@@ -2553,14 +2567,11 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		
 		// Image
 		String strPath = "Image/Background/";
-		try{
-			imgStart = ImageIO.read(new File(strPath + "start_bg.png"));
-			imgBackground = ImageIO.read(new File(strPath + "general_bg.png"));
-			imgWait = ImageIO.read(new File(strPath + "wait_bg.png"));
-			
-		}catch(IOException e){
-			System.out.println("Error: Could not load image");
-			e.printStackTrace();
+		imgStart = loadImageResource(strPath + "start_bg.png");
+		imgBackground = loadImageResource(strPath + "general_bg.png");
+		imgWait = loadImageResource(strPath + "wait_bg.png");
+		if(imgStart == null || imgBackground == null || imgWait == null){
+			System.out.println("Error: Could not load background images");
 		}
 		loadDeck();
 		preloadCardImages();
