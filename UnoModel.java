@@ -109,47 +109,32 @@ public class UnoModel{
     */
 	public void loadDeck(){
 		intDeckSize = 0;
-		try(InputStream deckStream = openResourceOrFile("cards.csv")){
-			if(deckStream == null){
-				System.out.println("Could not find cards.csv");
-				buildFallbackDeck();
-				return;
-			}
-			BufferedReader reader = new BufferedReader(new java.io.InputStreamReader(deckStream));
+		// try & catch reading csv file
+		try{
+			BufferedReader reader = new BufferedReader(new FileReader("cards.csv"));
 			reader.readLine(); 
 			String strLine;
+			//reading & adding cards from csv file
 			while((strLine = reader.readLine()) != null){
 				strLine = strLine.trim();
 				if(!strLine.equals("")){
 					String[] strParts = strLine.split(",");
+					
 					if(strParts.length >= 4 && intDeckSize < 100){
 						strDeck[intDeckSize] = strParts;
 						intDeckSize++;
 					}
 				}
-			}
+			}	
 			reader.close();
 			System.out.println("Deck loaded: "+ intDeckSize+" card");
+			
 		}catch(Exception e){
-			System.out.println("Could not load cards: " + e.getMessage());
+			System.out.println("Could not load cards");
 			buildFallbackDeck();
 		}
 	}
-
-	private InputStream openResourceOrFile(String strPath){
-		String resourcePath = strPath.startsWith("/") ? strPath : "/" + strPath;
-		InputStream stream = UnoModel.class.getResourceAsStream(resourcePath);
-		if(stream != null){
-			return stream;
-		}
-		try{
-			java.io.File f = new java.io.File(strPath.startsWith("/") ? strPath.substring(1) : strPath);
-			if(f.exists()){
-				return new java.io.FileInputStream(f);
-			}
-		}catch(java.io.IOException e){
-		}
-		return null;
+	
 	// backup/fallback deck if csv missing
 	/**constructs a standard 100-card Uno deck configuration to serve 
      * as a backup if "cards.csv" external file cannot be loaded.
