@@ -173,7 +173,6 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 	JButton btnHost = createGoldButton("HOST GAME");
 	JButton btnJoin = createGoldButton("JOIN GAME");
 	JTextField ipField = new JTextField("127.0.0.1");
-	JLabel lblJoinNote = new JLabel("<html>Use host's public IP if joining from a different network. Forward port 5555 if needed.</html>");
 	JTextField chatInput = new JTextField();
 	JTextArea chatArea = new JTextArea();
 	JScrollPane chatScroll = new JScrollPane(chatArea);
@@ -939,20 +938,6 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			strPlayHand[intHandSize] = strDrawnCard;
 			intHandSize++;
 			intCardCount1 = intHandSize;
-			int intMyIdx = (controller != null) ? controller.getLocalPlayerIndex() : 0;
-			if(model != null){
-				model.intHandSizes[intMyIdx] = intHandSize;
-				if(model.checkElimination(intMyIdx)){
-					blnPlayerEliminated[intMyIdx] = true;
-					blnEliminated = true;
-					if(network != null){
-						network.sendElimination(intMyIdx, getPlayerName(intMyIdx));
-					}
-					setComponentVisibility();
-					repaint();
-					return;
-				}
-			}
 
 			// announce draw to others
 			chatArea.append("[GAME MESSAGE] " + strName + " has drawn a card\n");
@@ -970,6 +955,12 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				}
 			}
 
+			if(intHandSize > intMaxCards){
+				blnEliminated = true;
+				setComponentVisibility();
+				repaint();
+				return;
+			}
 			showDisplayCard();
 		}
 	}
@@ -1151,12 +1142,6 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			String strTargetName = (model != null && model.strPlayerNames != null && model.strPlayerNames.length > intTarget) ? model.strPlayerNames[intTarget] : strPlayNames[intTarget];
 			if(model != null){
 				model.intHandSizes[intTarget] += 2;
-				if(model.checkElimination(intTarget)){
-					blnPlayerEliminated[intTarget] = true;
-					if(network != null){
-						network.sendElimination(intTarget, getPlayerName(intTarget));
-					}
-				}
 			} else {
 				if(intTarget == 0) intCardCount1 += 2;
 				else if(intTarget == 1) intCardCount2 += 2;
@@ -1180,12 +1165,6 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			String strTargetName = (model != null && model.strPlayerNames != null && model.strPlayerNames.length > intTarget) ? model.strPlayerNames[intTarget] : strPlayNames[intTarget];
 			if(model != null){
 				model.intHandSizes[intTarget] += 4;
-				if(model.checkElimination(intTarget)){
-					blnPlayerEliminated[intTarget] = true;
-					if(network != null){
-						network.sendElimination(intTarget, getPlayerName(intTarget));
-					}
-				}
 			} else {
 				if(intTarget == 0) intCardCount1 += 4;
 				else if(intTarget == 1) intCardCount2 += 4;
@@ -1234,12 +1213,6 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 			String strTargetName = getPlayerName(intTarget);
 			if(model != null){
 				model.intHandSizes[intTarget] += 4;
-				if(model.checkElimination(intTarget)){
-					blnPlayerEliminated[intTarget] = true;
-					if(network != null){
-						network.sendElimination(intTarget, getPlayerName(intTarget));
-					}
-				}
 			} else {
 				if(intTarget == 0) intCardCount1 += 4;
 				else if(intTarget == 1) intCardCount2 += 4;
@@ -1975,7 +1948,6 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		btnHost.setVisible(blnThemeScreen);
 		btnJoin.setVisible(blnThemeScreen);
 		ipField.setVisible(blnThemeScreen);
-		lblJoinNote.setVisible(blnThemeScreen);
 		
 		// Game screen
 		boolean blnShowGameBtns = blnTurnScreen && !blnHelp && !blnLeaderBoard;
@@ -2183,24 +2155,6 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 				}else if(strMessage.startsWith("GAMEOVER")){
 					showGameOver(strMessage);
 					
-				}else if(strMessage.startsWith("ELIM|")){
-					String[] strParts = strMessage.split("\\|");
-					if(strParts.length >= 3 && model != null){
-						try{
-							int intElimIndex = Integer.parseInt(strParts[1].trim());
-							if(intElimIndex >= 0 && intElimIndex < model.blnEliminated.length){
-								model.blnEliminated[intElimIndex] = true;
-								blnPlayerEliminated[intElimIndex] = true;
-								intActivePlayers = Math.max(0, intActivePlayers - 1);
-								if(intElimIndex == ((controller != null) ? controller.getLocalPlayerIndex() : 0)){
-									blnEliminated = true;
-									setComponentVisibility();
-									repaint();
-								}
-							}
-						}catch(NumberFormatException ex){
-						}
-					}
 				}else if(strMessage.startsWith("TURN|")){
 					if(blnWaitScreen || blnDisplayCard || blnFlipFirst || blnTurnScreen){
 						String[] strTurnParts = strMessage.split("\\|");
@@ -2484,12 +2438,7 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		ipField.setBounds(535, 610, 210, 40);
 		ipField.setVisible(false);
 		this.add(ipField);
-
-		lblJoinNote.setBounds(535, 660, 420, 30);
-		lblJoinNote.setVisible(false);
-		lblJoinNote.setForeground(Color.WHITE);
-		lblJoinNote.setFont(new Font("Arial", Font.PLAIN, 12));
-		this.add(lblJoinNote);
+		
 
 		// Pick up a card button
 		btnPickUp.setBounds(1040, 290, 210, 45);

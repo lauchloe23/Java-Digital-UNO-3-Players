@@ -76,31 +76,6 @@ public class UnoController implements ActionListener{
 				
 			}
 		}
-		
-		if(strMessage.startsWith("ELIM|")){
-			if(model != null){
-				String[] strParts = strMessage.split("\\|");
-				if(strParts.length >= 3){
-					try{
-						int intElimIndex = Integer.parseInt(strParts[1].trim());
-						if(intElimIndex >= 0 && intElimIndex < model.blnEliminated.length && !model.blnEliminated[intElimIndex]){
-							model.blnEliminated[intElimIndex] = true;
-							model.intActivePlayers = Math.max(0, model.intActivePlayers - 1);
-							if(model.intActivePlayers <= 1){
-								for(int i = 0; i < model.intPlayers; i++){
-									if(!model.blnEliminated[i]){
-										model.strWinner = model.strPlayerNames[i];
-										model.blnGameOver = true;
-										break;
-									}
-								}
-							}
-						}
-					}catch(NumberFormatException e){
-					}
-				}
-			}
-		}
 
 		// Joiner receives the seat index the host assigned to it.
 		if(strMessage.startsWith("INDEX|")){
