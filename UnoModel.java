@@ -272,6 +272,27 @@ public class UnoModel{
      * after drawing, they are automatically eliminated.
      * intPlayer: The index value identifying the target player (0 to 2).
 	*/
+	public boolean checkElimination(int intPlayer){
+		if(intPlayer < 0 || intPlayer >= intPlayers){
+			return false;
+		}
+		if(blnEliminated[intPlayer]){
+			return true;
+		}
+		if(intHandSizes[intPlayer] > intMaxCards){
+			eliminatePlayer(intPlayer);
+			return true;
+		}
+		return false;
+	}
+	
+	public boolean isEliminated(int intPlayer){
+		if(intPlayer < 0 || intPlayer >= intPlayers){
+			return false;
+		}
+		return blnEliminated[intPlayer];
+	}
+	
 	public void drawCard(int intPlayer){
 		if(intPlayer < 0 || intPlayer >= intPlayers){
 			return;
@@ -300,9 +321,7 @@ public class UnoModel{
 		intDrawPileSize--;
 		
 		// check if player exceed 30 cards
-		if(intHandSizes[intPlayer] > intMaxCards){
-			eliminatePlayer(intPlayer);
-		}
+		checkElimination(intPlayer);
 	}
 	
 	// play card (removes a card from player's hand to place on discard)

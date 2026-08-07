@@ -1,5 +1,15 @@
 
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 /**The UnoNetwork class handles the online multiplayer system. 
  * It connects players as hosts or guests, cleanly disconnects them, 
@@ -8,13 +18,12 @@ import java.awt.event.*;
  * Version: 1.0
 */
 public class UnoNetwork implements ActionListener{
-	//Properties
-	/** The core network socket manager component. */
-	private SuperSocketMaster ssm;
 	/** The callback listener notified when a network event fires. */
 	private ActionListener gameListener = null;
 	/** Stores the raw string received from the last network operation. */
 	private String strLastMessage = "";
+	/** The active socket controller that manages server/client networking. */
+	private NetworkSocketController socketController = null;
 
 	//Methods
 	/**Automatically triggers when new network data arrives. 
@@ -23,9 +32,8 @@ public class UnoNetwork implements ActionListener{
 	 * evt: triggered ActionEvent originating from socket
 	*/
 	public void actionPerformed(ActionEvent evt){
-		if(evt.getSource() == ssm){
-			strLastMessage = ssm.readText();
-
+		if(evt.getSource() == socketController){
+			strLastMessage = socketController.readText();
 			if(gameListener != null){
 				gameListener.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "UNO_NETWORK_MESSAGE"));
 			}
@@ -47,8 +55,8 @@ public class UnoNetwork implements ActionListener{
 	 * Returns true if it worked, and false if something went wrong.
 	*/
 	public boolean startServer(int intPort){
-		ssm = new SuperSocketMaster(intPort, this);
-		return ssm.connect();
+		socketController = new NetworkSocketController(null, intPort, this);
+		return socketController.startServer();
 	}
 	
 	/**
@@ -59,9 +67,9 @@ public class UnoNetwork implements ActionListener{
 	 * intHandSize: amount of cards remain in everyone's hand
 	*/
 	public void sendTurnUpdate(String strCardPlayed, String strWildColor, int[] intHandSizes, int intNextTurn){
-		if(ssm != null){
+		if(socketController != null){
 			String strSizes = intHandSizes[0] + "," + intHandSizes[1] + "," + intHandSizes[2];
-			ssm.sendText("TURN|" + strCardPlayed + "|" + strWildColor + "|" + strSizes  + "|" + intNextTurn);
+			socketController.sendText("TURN|" + strCardPlayed + "|" + strWildColor + "|" + strSizes  + "|" + intNextTurn);
 		}
 	}
 	
@@ -71,8 +79,8 @@ public class UnoNetwork implements ActionListener{
 	 * Returns true if the connection was successful, and false if it failed.
 	*/
 	public boolean connectServer(String strIPadress, int intPort){
-		ssm = new SuperSocketMaster(strIPadress, intPort,this);
-		return ssm.connect();
+		socketController = new NetworkSocketController(strIPadress, intPort,this);
+		return socketController.startClient();
 	}
 	
 	//disconnecting user from network
@@ -80,8 +88,9 @@ public class UnoNetwork implements ActionListener{
 	 * Safely disconnects the player from the online game and cleans up the network connection
 	*/
 	public void userDisconnect(){
-		if(ssm!= null){
-			ssm.disconnect();
+		if(socketController != null){
+			socketController.disconnect();
+			socketController = null;
 		}
 	}
 	
@@ -94,8 +103,8 @@ public class UnoNetwork implements ActionListener{
 	 * strMessage: literal text chat message to transmit
 	*/
 	public void sendPlayerChat(String strPlayerName, String strMessage){
-		if(ssm != null){
-			ssm.sendText("[CHAT] " + strPlayerName + ": "+strMessage);
+		if(socketController != null){
+			socketController.sendText("[CHAT] " + strPlayerName + ": "+strMessage);
 		}
 	}
 	
@@ -106,8 +115,8 @@ public class UnoNetwork implements ActionListener{
 	 * strPlayerName: The username of the new player who just joined.
 	*/
 	public void sendJoin(String strPlayerName){
-		if(ssm != null){
-			ssm.sendText("[GAME MESSAGE] "+strPlayerName+ " has joined");
+		if(socketController != null){
+			socketController.sendText("[GAME MESSAGE] "+strPlayerName+ " has joined");
 		}
 	}
 	
@@ -118,8 +127,8 @@ public class UnoNetwork implements ActionListener{
 	 * strPlayerName: The username of the player who just left.
 	*/
 	public void sendLeft(String strPlayerName){
-		if(ssm != null){
-			ssm.sendText("[GAME MESSAGE] "+strPlayerName +  " has left");
+		if(socketController != null){
+			socketController.sendText("[GAME MESSAGE] "+strPlayerName +  " has left");
 		}
 	}
 
@@ -130,8 +139,8 @@ public class UnoNetwork implements ActionListener{
 	 * strThemeName: The name of the specific theme they chose
 	*/
 	public void sendTheme(String strPlayerName, String strThemeName){
-		if(ssm != null){
-			ssm.sendText("[GAME MESSAGE] "+strPlayerName + " SELECTED: " + strThemeName );
+		if(socketController != null){
+			socketController.sendText("[GAME MESSAGE] "+strPlayerName + " SELECTED: " + strThemeName );
 		}
 	}
 	
@@ -141,8 +150,8 @@ public class UnoNetwork implements ActionListener{
 	 * strPlayerName: The username of the player who drew the card.
 	*/
 	public void sendCardDrawn(String strPlayerName){
-		if(ssm != null){
-			ssm.sendText("[GAME MESSAGE] "+strPlayerName + " has drawn a card");
+		if(socketController != null){
+			socketController.sendText("[GAME MESSAGE] "+strPlayerName + " has drawn a card");
 		}
 	}
 	
@@ -154,8 +163,8 @@ public class UnoNetwork implements ActionListener{
 	 * strCardName: The text code or ID identifying exactly which card was played
 	*/
 	public void sendPlayerCard(String strPlayerName, String strCardName){
-		if(ssm != null){
-			ssm.sendText("[GAME MESSAGE] "+strPlayerName + " played "+ strCardName);
+		if(socketController != null){
+			socketController.sendText("[GAME MESSAGE] "+strPlayerName + " played "+ strCardName);
 		}
 	}
 	
@@ -167,8 +176,8 @@ public class UnoNetwork implements ActionListener{
 	 * strTargetName: The username of the unfortunate "victim" who has to receive the penalty.
 	*/
 	public void sendPlayerAttack(String strPlayerName, String strAttackType, String strTargetName){
-		if(ssm != null){
-			ssm.sendText("[GAME MESSAGE] "+strPlayerName + " attacked "+ strTargetName + ": "+strAttackType);
+		if(socketController != null){
+			socketController.sendText("[GAME MESSAGE] "+strPlayerName + " attacked "+ strTargetName + ": "+strAttackType);
 		}
 	}
 	
@@ -179,8 +188,8 @@ public class UnoNetwork implements ActionListener{
 	 * strColour: The new color they selected
 	*/
 	public void sendColourChange(String strPlayerName, String strColour){
-		if(ssm != null){
-			ssm.sendText("[GAME MESSAGE] "+strPlayerName + " changed colour to: "+ strColour);
+		if(socketController != null){
+			socketController.sendText("[GAME MESSAGE] "+strPlayerName + " changed colour to: "+ strColour);
 		}
 	}
 	
@@ -190,16 +199,23 @@ public class UnoNetwork implements ActionListener{
 	 * strWinner: The username of the player who won the game.
 	*/
 	public void sendGameOver(String strWinner){
-		if (ssm != null){
-			ssm.sendText("GAMEOVER: " + strWinner + " has won!!!");
+		if (socketController != null){
+			socketController.sendText("GAMEOVER: " + strWinner + " has won!!!");
+		}
+	}
+
+	// send elimination message
+	public void sendElimination(int intPlayerIndex, String strPlayerName){
+		if(socketController != null){
+			socketController.sendText("ELIM|" + intPlayerIndex + "|" + strPlayerName);
 		}
 	}
 
 	// send UNO reached message
 	/** Announces that a player has reached UNO (one card remaining). */
 	public void sendReachedUno(String strPlayerName){
-		if(ssm != null){
-			ssm.sendText("[GAME MESSAGE] " + strPlayerName + " has reached UNO!");
+		if(socketController != null){
+			socketController.sendText("[GAME MESSAGE] " + strPlayerName + " has reached UNO!");
 		}
 	}
 	
@@ -214,7 +230,7 @@ public class UnoNetwork implements ActionListener{
 	 * strDiscardTop: The name/ID of the very first card turned face-up on the table to start the game.
 	 */
 	public void sendGameSetup(String[][][] strHands, int[] intHandSizes, int[] intTurnOrder, String[] strDiscardTop,String[] strPlayerNames){
-		if(ssm != null){
+		if(socketController != null){
 			// Each card is encoded as cardName
 			String strMsg = "SETUP|";
 			
@@ -242,7 +258,7 @@ public class UnoNetwork implements ActionListener{
 				if(i < 2) strMsg += ",";
 			}
 				
-			ssm.sendText(strMsg);
+			socketController.sendText(strMsg);
 		}
 	}
 	
@@ -251,8 +267,8 @@ public class UnoNetwork implements ActionListener{
 	 * strMessage: The exact piece of text you want to transmit over the network.
 	*/
 	public void send(String strMessage){
-		if(ssm != null){
-			ssm.sendText(strMessage);
+		if(socketController != null){
+			socketController.sendText(strMessage);
 		}
 	}
 
@@ -265,5 +281,217 @@ public class UnoNetwork implements ActionListener{
 	public UnoNetwork(ActionListener gameListener){
 		this.gameListener = gameListener;
 	}
-
+	
+	private void notifyListener(){
+		if(gameListener != null){
+			gameListener.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "UNO_NETWORK_MESSAGE"));
+		}
+	}
+	
+	private class NetworkSocketController implements Runnable{
+		private final String strServerHost;
+		private final int intPort;
+		private final UnoNetwork owner;
+		private ServerSocket serverSocket = null;
+		private Socket clientSocket = null;
+		private BufferedReader inBuffer = null;
+		private PrintWriter outBuffer = null;
+		private String strIncomingText = "";
+		private volatile boolean blnRunning = false;
+		private final List<ClientConnection> clients = new ArrayList<ClientConnection>();
+		private Thread listenerThread = null;
+		
+		private NetworkSocketController(String strServerHost, int intPort, UnoNetwork owner){
+			this.strServerHost = strServerHost;
+			this.intPort = intPort;
+			this.owner = owner;
+		}
+		
+		public boolean startServer(){
+			try{
+				serverSocket = new ServerSocket(intPort, 50, InetAddress.getByName("0.0.0.0"));
+				blnRunning = true;
+				listenerThread = new Thread(this);
+				listenerThread.start();
+				return true;
+			}catch(Exception e){
+				return false;
+			}
+		}
+		
+		public boolean startClient(){
+			try{
+				clientSocket = new Socket(strServerHost, intPort);
+				inBuffer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+				outBuffer = new PrintWriter(clientSocket.getOutputStream(), true);
+				blnRunning = true;
+				listenerThread = new Thread(this);
+				listenerThread.start();
+				return true;
+			}catch(IOException e){
+				return false;
+			}
+		}
+		
+		public String readText(){
+			return strIncomingText;
+		}
+		
+		public void run(){
+			if(serverSocket != null){
+				acceptLoop();
+			}else if(clientSocket != null){
+				readLoop();
+			}
+		}
+		
+		private void acceptLoop(){
+			while(blnRunning){
+				try{
+					Socket acceptedSocket = serverSocket.accept();
+					ClientConnection connection = new ClientConnection(acceptedSocket);
+					synchronized(clients){
+						clients.add(connection);
+					}
+					Thread thread = new Thread(new ClientReader(connection));
+					thread.start();
+				}catch(IOException e){
+					if(!blnRunning){
+						break;
+					}
+				}
+			}
+		}
+		
+		private void readLoop(){
+			while(blnRunning){
+				try{
+					String strLine = inBuffer.readLine();
+					if(strLine != null){
+						strIncomingText = strLine;
+						owner.notifyListener();
+					}
+				}catch(IOException e){
+					break;
+				}
+			}
+			disconnect();
+		}
+		
+		public boolean sendText(String strText){
+			if(serverSocket != null){
+				synchronized(clients){
+					for(ClientConnection client : clients){
+						if(client != null && client.writer != null){
+							client.writer.println(strText);
+						}
+					}
+				}
+				return true;
+			}
+			if(clientSocket != null && outBuffer != null){
+				outBuffer.println(strText);
+				return true;
+			}
+			return false;
+		}
+		
+		public void disconnect(){
+			blnRunning = false;
+			synchronized(clients){
+				for(ClientConnection client : clients){
+					try{
+						if(client.socket != null) client.socket.close();
+					}catch(IOException e){
+					}
+				}
+				clients.clear();
+			}
+			try{
+				if(serverSocket != null){
+					serverSocket.close();
+				}
+			}catch(IOException e){
+			}
+			try{
+				if(clientSocket != null){
+					clientSocket.close();
+				}
+			}catch(IOException e){
+			}
+			serverSocket = null;
+			clientSocket = null;
+			inBuffer = null;
+			outBuffer = null;
+		}
+		
+		private void handleIncomingText(String strText, ClientConnection sender){
+			if(strText == null || strText.trim().equals("")){
+				return;
+			}
+			strIncomingText = strText;
+			if(serverSocket != null){
+				synchronized(clients){
+					for(ClientConnection client : clients){
+						if(client != sender && client.writer != null){
+							client.writer.println(strText);
+						}
+					}
+				}
+			}
+			owner.notifyListener();
+		}
+		
+		private class ClientReader implements Runnable{
+			private final ClientConnection connection;
+			
+			private ClientReader(ClientConnection connection){
+				this.connection = connection;
+			}
+			
+			public void run(){
+				try{
+					while(blnRunning){
+						String strLine = connection.reader.readLine();
+						if(strLine == null){
+							break;
+						}
+						handleIncomingText(strLine, connection);
+					}
+				}catch(IOException e){
+				}
+				cleanupConnection(connection);
+			}
+		}
+		
+		private void cleanupConnection(ClientConnection connection){
+			synchronized(clients){
+				clients.remove(connection);
+			}
+			try{
+				if(connection.socket != null){
+					connection.socket.close();
+				}
+			}catch(IOException e){
+			}
+		}
+		
+		private class ClientConnection{
+			private final Socket socket;
+			private BufferedReader reader;
+			private PrintWriter writer;
+			
+			private ClientConnection(Socket socket){
+				this.socket = socket;
+				try{
+					this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+					this.writer = new PrintWriter(socket.getOutputStream(), true);
+				}catch(IOException e){
+					this.reader = null;
+					this.writer = null;
+				}
+			}
+		}
+	}
 }
+
