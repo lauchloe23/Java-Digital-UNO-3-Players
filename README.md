@@ -1,3 +1,6 @@
+Here is the README without the ASCII diagram section:
+
+```markdown
 # Multiplayer Modern Uno Framework
 
 ![Java](https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
@@ -10,8 +13,6 @@ A multi-threaded desktop implementation of the classic Uno card game built in Ja
 ---
 
 ## Technical Highlights & Architecture
-
-```
 
 * **Model-View-Controller (MVC) Pattern**: Decouples domain logic (`UnoModel`), event handling/networking (`UnoController`), and UI updates (`UnoView`), resulting in a clean separation of concerns and maintainable architecture.
 * **Low-Level Socket Communication (`UnoNetwork`)**: Utilizes custom Java TCP sockets and thread-safe channels to broadcast state changes, handle real-time chat, and synchronize turn transitions between distributed game instances.
