@@ -11,25 +11,6 @@ A multi-threaded desktop implementation of the classic Uno card game built in Ja
 
 ## Technical Highlights & Architecture
 
-
-```
-
-```
-             +-------------------+
-             |    UnoController  | <--- Handles User Events & Sockets
-             +---------+---------+
-                       |
-        +--------------+--------------+
-        |                             |
-        v                             v
-
-```
-
-+-------------------+         +-------------------+
-|      UnoModel     |         |      UnoView      |
-|  (Game Logic/State) |         |  (Graphical UI)   |
-+-------------------+         +-------------------+
-
 ```
 
 * **Model-View-Controller (MVC) Pattern**: Decouples domain logic (`UnoModel`), event handling/networking (`UnoController`), and UI updates (`UnoView`), resulting in a clean separation of concerns and maintainable architecture.
