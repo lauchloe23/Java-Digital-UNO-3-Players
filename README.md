@@ -27,13 +27,10 @@ A GUI-based multiplayer Uno card game built in Java using the Model-View-Control
    ```bash
    git clone [https://github.com/lauchloe23/Java-Uno-Game.git](https://github.com/lauchloe23/Java-Uno-Game.git)
    cd Java-Uno-Game
-Compile the source files:
 
-Bash
+Compile the source files:
 javac *.java
 
 Run the game:
-
-Bash
 java Main
 
