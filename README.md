@@ -30,10 +30,10 @@ A GUI-based multiplayer Uno card game built in Java using the Model-View-Control
 Compile the source files:
 
 Bash
-   ```bash
-   javac *.java
+javac *.java
 
 Run the game:
+
 Bash
-   ```bash
-   java Main
+java Main
+
