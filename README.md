@@ -32,8 +32,8 @@ Compile the source files:
 Bash
    ```bash
    javac *.java
-   Run the game:
 
+Run the game:
 Bash
    ```bash
    java Main
