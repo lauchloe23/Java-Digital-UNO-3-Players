@@ -1,36 +1,50 @@
-# Java Uno Game
+# Java Digital UNO (3 Players)
 
-A GUI-based multiplayer Uno card game built in Java using the Model-View-Controller (MVC) design pattern and socket networking.
+A 3-player networked UNO card game with a graphical interface, built in Java using the Model-View-Controller (MVC) pattern and TCP sockets.
 
 ## Features
 
-* **Multiplayer Support**: Connect and play with other users via Java sockets.
-* **Graphical Interface**: Interactive GUI for viewing cards, playing turns, and chatting.
-* **Game Logic**: Full implementation of standard Uno rules, card matching, and scoring.
+- **Online multiplayer:** one player hosts and two others join over the network
+- **Full UNO rules:** card matching, skips, reverses, draw 2, wild and wild draw 4 cards, and player elimination
+- **Swing GUI:** see your hand, play cards, and follow each turn
+- **Card themes:** theme selection screen (the public version ships with the standard card set)
+- **Custom decks:** card data is loaded from `cards.csv`
 
-## Tech Stack
+## Tech stack
 
-* **Language**: Java
-* **GUI**: Java Swing / AWT
-* **Networking**: Java TCP Sockets (`java.net`)
+- Java
+- Java Swing / AWT for the GUI
+- Java TCP sockets for networking (default port 5555)
 
-## Project Structure
+## Project structure
 
-* **`UnoModel.java`**: Manages game rules, deck state, and scoring logic.
-* **`UnoView.java`**: Handles visual elements, layout, and user interactions.
-* **`UnoController.java`**: Connects the Model and View, managing user actions and network events.
-* **`UnoNetwork.java`**: Handles low-level socket connections for real-time play.
+| File | Purpose |
+|---|---|
+| `UnoModel.java` | Game rules, deck, turn order, and scoring |
+| `UnoView.java` | GUI layout and user interaction |
+| `UnoController.java` | Connects the model and view, handles network events (entry point) |
+| `UnoNetwork.java` | Hosting and joining games over sockets |
+| `SuperSocketMaster.java` | Socket helper class |
+| `cards.csv` | Card list and image mapping |
+| `build-jar.sh` | Builds a runnable `UnoGame.jar` |
 
-## Getting Started
+## Getting started
 
-1. **Clone the repository:**
-   ```bash
-   git clone [https://github.com/lauchloe23/Java-Uno-Game.git](https://github.com/lauchloe23/Java-Uno-Game.git)
-   cd Java-Uno-Game
+**Option 1: run the jar**
 
-Compile the source files:
+```bash
+java -jar UnoGame.jar
+```
+
+**Option 2: build from source**
+
+```bash
+git clone https://github.com/lauchloe23/Java-Digital-UNO-3-Players.git
+cd Java-Digital-UNO-3-Players
 javac *.java
+java UnoController
+```
 
-Run the game:
-java Main
+To rebuild the jar, run `./build-jar.sh`.
 
+**To play:** one player hosts a game, and the other two join using the host's IP address. All three need to be on the same network.

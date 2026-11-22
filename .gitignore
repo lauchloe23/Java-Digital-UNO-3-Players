@@ -23,5 +23,5 @@
 hs_err_pid*
 replay_pid*
 
-git rm --cached Graphics/UnoView.class
 
+.DS_Store

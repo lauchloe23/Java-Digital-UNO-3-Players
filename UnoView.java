@@ -1940,8 +1940,8 @@ public class UnoView extends JPanel implements ActionListener, MouseListener, Ke
 		
 		// Theme Screen
 		btnStandard.setVisible(blnThemeScreen);
-		btnPokemon.setVisible(blnThemeScreen);
-		btnInsideOut.setVisible(blnThemeScreen);
+		btnPokemon.setVisible(false); // themed card art removed from public repo
+		btnInsideOut.setVisible(false);
 		nameField.setVisible(blnThemeScreen);
 		btnEnterGame.setVisible(blnThemeScreen);
 		//host/join buttons
