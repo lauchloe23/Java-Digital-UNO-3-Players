@@ -2,6 +2,9 @@
 
 A 3-player networked UNO card game with a graphical interface, built in Java using the Model-View-Controller (MVC) pattern and TCP sockets.
 
+## Authors
+Built by Chloe Lau and teammates as a group project.
+
 ## Features
 
 - **Online multiplayer:** one player hosts and two others join over the network
